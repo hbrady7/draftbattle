@@ -25,7 +25,7 @@ _Current phase, what's done, what's next, dead ends already tried. Kept current 
 - Phase 7: structural mean model (6b–6e) + LightGBM (6f), feature-group ablations (paired bootstrap; ship only if CRPS improves, 95% CI excludes 0) → populate `ablations.csv`, log CRPS gains in DECISIONS.
 
 ## Blockers / open
-- **GitHub remote still not created — push is blocked.** `git push` returns the exact error `ERROR: Repository not found` (SSH auth to `hbrady7` is confirmed working; the repo simply doesn't exist). Local commits continue each phase; all get pushed once `hbrady7/draftbattle.js` (private) exists — user to create it, or provide a PAT / install `gh`. See DECISIONS D0.7.
+- **RESOLVED — remote created + pushed.** User created the repo; note it's named **`hbrady7/draftbattle`** (not `draftbattle.js`, despite the local dir). Remote = `git@github.com:hbrady7/draftbattle.git` (SSH). Phases 0–6 pushed to `origin/main` (`c80ebca`). Push each phase from here.
 
 ## Dead ends tried
-- `gh` CLI, `brew`, `~/.git-credentials`, credential helper, keychain github item, `*TOKEN*` env var — all absent. SSH auth to `hbrady7` verified working (push fails only because the repo doesn't exist yet).
+- `gh` CLI, `brew`, `~/.git-credentials`, credential helper, keychain github item, `*TOKEN*` env var — all absent. SSH auth to `hbrady7` is the only GitHub auth; repo creation had to be done by the user (done).
