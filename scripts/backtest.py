@@ -28,7 +28,10 @@ from sklearn.isotonic import IsotonicRegression
 
 import data_sources as ds
 import distribution as dist
+import features as feat_mod
 import ids as idmod
+import model_gbm
+import model_structural
 import opponents as opp
 import player_sd
 import sim as simmod
@@ -134,6 +137,23 @@ def ecr_weekly(games):
     wp["ecr"] = pd.to_numeric(wp["ecr"], errors="coerce")
     wp = wp.dropna(subset=["ecr"])
     wp["pos_rank"] = wp.groupby(["season", "week", "pos"])["ecr"].rank(method="first")
+
+    # §5 leakage guard: the Friday ECR scrape already "knows" that week's Thursday
+    # (or earlier) game results, so drop ECR rows whose team kicked off before the
+    # scrape date. pos_rank is kept as the true pre-drop ECR positional rank.
+    gd = games.copy()
+    gd["gday"] = pd.to_datetime(gd["gameday"], errors="coerce").dt.date
+    tg = {}
+    for _, r in gd.dropna(subset=["gday"]).iterrows():
+        for tm in (r["home_team"], r["away_team"]):
+            tg[(int(r["season"]), int(r["week"]), tm)] = r["gday"]
+    if "team" in wp.columns:
+        pre = [(tg.get((int(s), int(w), t)) is not None and sd is not None
+                and tg[(int(s), int(w), t)] < sd)
+               for s, w, t, sd in zip(wp["season"], wp["week"], wp["team"], wp["scrape_date"])]
+        n_drop = int(np.sum(pre))
+        wp = wp[[not x for x in pre]]
+        ecr_weekly.last_dropped = n_drop  # introspectable for the report
     return wp[["season", "week", "pos", "player", "mergename", "id", "ecr", "sd", "pos_rank"]]
 
 
@@ -203,7 +223,41 @@ def isotonic_by_pos(train):
     return models
 
 
-def run_backtest(weeks, verbose=True):
+def build_model_lookups(wp_join, seasons, verbose=True):
+    """Structural + GBM mean per (gsis,season,week) over the ECR universe (walk-forward)."""
+    feat = feat_mod.build_feature_frame(seasons=tuple(sorted(set(seasons) | {min(seasons) - 1})))
+    feat = feat.rename(columns={"player_id": "gsis"})
+    nonmarket = [c for c in feat_mod.ALL_FEATS if c not in model_gbm.MARKET]
+    feat_small = feat[["gsis", "season", "week"] + [c for c in nonmarket if c in feat.columns]]
+
+    uni_seasons = tuple(sorted(set(seasons) | {min(seasons) - 1}))  # +prior season for GBM training
+    uni_rows = []
+    for S in uni_seasons:
+        for w in range(2, 18):
+            wk = wp_join[(wp_join["season"] == S) & (wp_join["week"] == w)]
+            if wk.empty:
+                continue
+            uni_rows.append(pd.concat([wk[wk["pos"] == p].nsmallest(TOPN[p], "ecr") for p in POS]))
+    uni = pd.concat(uni_rows, ignore_index=True).rename(columns={"sd": "ecr_sd", "pos": "position"})
+    uni = uni[["gsis", "season", "week", "position", "ecr", "ecr_sd", "pos_rank", "y"]]
+    mdf = uni.merge(feat_small, on=["gsis", "season", "week"], how="left").reset_index(drop=True)
+
+    mdf["structural"] = model_structural.structural_means(mdf)
+    mdf["gbm"] = np.nan
+    for S in seasons:
+        tr = mdf[mdf["season"] < S]
+        ev = mdf[mdf["season"] == S]
+        if len(tr) < 200 or ev.empty:
+            continue
+        mdf.loc[ev.index, "gbm"] = model_gbm.train_predict(tr, ev)
+        if verbose:
+            print(f"  GBM trained for {S} on {len(tr)} rows, predicted {len(ev)}")
+    struct_by = {(r.gsis, int(r.season), int(r.week)): r.structural for r in mdf.itertuples()}
+    gbm_by = {(r.gsis, int(r.season), int(r.week)): r.gbm for r in mdf.itertuples()}
+    return struct_by, gbm_by, mdf
+
+
+def run_backtest(weeks, verbose=True, with_models=False):
     seasons = TRAIN_SEASONS
     games = ds.load_games()
     actuals = load_actuals(seasons + (2019, 2020))  # include priors for trailing/isotonic
@@ -242,7 +296,15 @@ def run_backtest(weeks, verbose=True):
         prior = wp_join[wp_join["season"] < S]
         iso_by_season[S] = isotonic_by_pos(prior) if len(prior) else {}
 
+    struct_by = gbm_by = {}
+    if with_models:
+        if verbose:
+            print("  building structural + GBM lookups…")
+        struct_by, gbm_by, _ = build_model_lookups(wp_join, seasons, verbose)
+
     BASELINES = ["ecr_implied", "trailing8", "trailing_xfp", "old_plan"]
+    if with_models:
+        BASELINES = BASELINES + ["structural", "gbm"]
     rows = []  # one dict per (baseline, pos, player-week) metric bundle
     for S in seasons:
         iso = iso_by_season.get(S, {})
@@ -267,6 +329,9 @@ def run_backtest(weeks, verbose=True):
                     "trailing_xfp": tx if tx is not None else (t8 if t8 is not None else ecr_imp),
                     "old_plan": (0.7 * ecr_imp + 0.3 * t8) if (t8 is not None and ecr_imp is not None) else ecr_imp,
                 }
+                if with_models:
+                    means["structural"] = struct_by.get((pid, S, w))
+                    means["gbm"] = gbm_by.get((pid, S, w))
                 scores = cur_team_scores(pid, S, w, team)
                 for b in BASELINES:
                     mu = means[b]
@@ -444,11 +509,137 @@ def contest_win_rate(sample_weeks, n_drafts=150, seed=1):
             "n_drafts": n_drafts, "null": 12.5}
 
 
+# --------------------------------------------------------- Phase 7: ablations --
+def _wp_with_y(seasons):
+    games = ds.load_games()
+    actuals = load_actuals(seasons + (2019, 2020))
+    act_idx = actuals.set_index(["player_id", "season", "week"])["pts"]
+    wp = ecr_to_gsis(ecr_weekly(games))
+    wp = wp[wp["gsis"].notna()].copy()
+    wp["y"] = [float(act_idx.get((g, s, w), 0.0)) for g, s, w in zip(wp["gsis"], wp["season"], wp["week"])]
+    return wp
+
+
+def _row_crps(pos, mean, y):
+    """Fast per-row CRPS with curve-only SD (no game-log lookup) — consistent across
+    ablation variants since only the mean changes."""
+    mean = max(0.0, float(mean))
+    sd = player_sd.player_sd(pos, mean, [])["sd"]
+    d = dist.player_distribution(pos, mean, sd, 1.0, None)
+    q = mixture_quantiles(d)
+    return float(2.0 * np.mean(np.where(y - q >= 0, CRPS_GRID * (y - q), (CRPS_GRID - 1) * (y - q))))
+
+
+def ablate(seasons, eval_weeks=(5, 11), n_boot=400, seed=3, verbose=True):
+    """§10 feature-group ablation on the GBM: model with vs without each group,
+    paired bootstrap across week-slices; ships iff the 95% CI of the CRPS
+    improvement (without − with) excludes 0 (positive)."""
+    wp = _wp_with_y(seasons)
+    _, _, mdf = build_model_lookups(wp, seasons, verbose=False)
+    ev = mdf[(mdf["season"].isin(seasons)) & (mdf["week"].isin(eval_weeks))].dropna(subset=["gbm"]).copy()
+    ev["crps_full"] = [_row_crps(p, m, y) for p, m, y in zip(ev["position"], ev["gbm"], ev["y"])]
+    rng = np.random.default_rng(seed)
+    out = []
+    for grp in ("vegas", "weather", "participation", "efficiency", "opponent"):
+        drop = set(feat_mod.GROUPS[grp])
+        feats = [f for f in model_gbm.GBM_FEATS if f not in drop]
+        ab = ev.copy(); ab["gbm_ab"] = np.nan
+        for S in seasons:
+            tr = mdf[mdf["season"] < S]
+            evs = ev[ev["season"] == S]
+            if len(tr) < 200 or evs.empty:
+                continue
+            ab.loc[evs.index, "gbm_ab"] = model_gbm.train_predict(tr, evs, feats=feats)
+        ab = ab.dropna(subset=["gbm_ab"])
+        ab["crps_ab"] = [_row_crps(p, m, y) for p, m, y in zip(ab["position"], ab["gbm_ab"], ab["y"])]
+        dslice = ab.groupby(["season", "week"]).apply(
+            lambda g: (g["crps_ab"] - g["crps_full"]).mean()).values
+        boot = np.array([np.mean(rng.choice(dslice, len(dslice), replace=True)) for _ in range(n_boot)])
+        lo, hi = np.percentile(boot, [2.5, 97.5])
+        delta = float(np.mean(dslice))
+        ships = bool(lo > 0)
+        out.append({"feature_group": grp, "position": "ALL",
+                    "crps_with": round(float(ab["crps_full"].mean()), 3),
+                    "crps_without": round(float(ab["crps_ab"].mean()), 3),
+                    "delta": round(delta, 3), "ci_low": round(float(lo), 3),
+                    "ci_high": round(float(hi), 3), "ships": ships})
+        if verbose:
+            print(f"  {grp:14s} ΔCRPS(without−with)={delta:+.3f} 95%CI[{lo:+.3f},{hi:+.3f}] ships={ships}")
+    return out
+
+
+def write_phase7(summ, ablations, weeks, eval_weeks):
+    # ablations.csv
+    lines = ["feature_group,position,crps_with,crps_without,delta,ci_low,ci_high,ships"]
+    for a in ablations:
+        lines.append(f"{a['feature_group']},{a['position']},{a['crps_with']},{a['crps_without']},"
+                     f"{a['delta']},{a['ci_low']},{a['ci_high']},{a['ships']}")
+    (OUT / "ablations.csv").write_text("\n".join(lines) + "\n")
+
+    rj = OUT / "report.json"
+    rep = json.loads(rj.read_text()) if rj.exists() else {}
+    rep["phase7"] = {"models": summ, "ablations": ablations,
+                     "eval_weeks_models": list(weeks), "eval_weeks_ablation": list(eval_weeks)}
+    rj.write_text(json.dumps(rep, indent=1))
+
+    order = sorted(summ, key=lambda b: summ[b]["overall"]["crps"])
+    ecr = summ.get("ecr_implied", {}).get("overall", {}).get("crps")
+    sec = ["", "## Phase 7: full model vs baselines",
+           "", f"All models scored apples-to-apples on sample weeks {list(weeks)} "
+           f"(4 seasons). (Phase-6 baseline numbers above are the full 16-week run.)", "",
+           "| model | n | MAE | RMSE | CRPS | cov90 |", "|---|---|---|---|---|---|"]
+    for b in order:
+        o = summ[b]["overall"]
+        star = " **" if b in ("structural", "gbm") else " "
+        sec.append(f"|{star}{b}{star.strip()} | {o['n']} | {o['mae']} | {o['rmse']} | "
+                   f"**{o['crps']}** | {o['cov90']} |")
+    sec += ["", "CRPS vs ECR-implied by position (our models must beat ECR to ship, §10):", "",
+            "| position | ecr_implied | structural | gbm | winner |", "|---|---|---|---|---|"]
+    for p in POS:
+        e = summ.get("ecr_implied", {}).get("by_pos", {}).get(p, {}).get("crps")
+        s = summ.get("structural", {}).get("by_pos", {}).get(p, {}).get("crps")
+        gg = summ.get("gbm", {}).get("by_pos", {}).get(p, {}).get("crps")
+        cand = {"ecr_implied": e, "structural": s, "gbm": gg}
+        win = min((k for k in cand if cand[k] is not None), key=lambda k: cand[k], default="—")
+        sec.append(f"| {p} | {e} | {s} | {gg} | {win} |")
+    sec += ["", f"**Verdict:** best overall CRPS = `{order[0]}`"
+            + (f" (ECR-implied {ecr})." if ecr is not None else "."),
+            "Where the structural/GBM models don't beat ECR, that's reported honestly "
+            "(the market is a strong baseline, §10/§19); the stacked model in Phase 10 "
+            "combines whichever wins per position.", "",
+            f"## Phase 7: feature-group ablations (GBM, eval weeks {list(eval_weeks)})",
+            "", "A group ships iff the 95% bootstrap CI of its CRPS improvement excludes 0.", "",
+            "| feature group | CRPS with | CRPS without | Δ(without−with) | 95% CI | ships |",
+            "|---|---|---|---|---|---|"]
+    for a in ablations:
+        sec.append(f"| {a['feature_group']} | {a['crps_with']} | {a['crps_without']} | "
+                   f"{a['delta']:+} | [{a['ci_low']:+}, {a['ci_high']:+}] | {'✓' if a['ships'] else '·'} |")
+    with open(OUT / "report.md", "a") as fh:
+        fh.write("\n".join(sec) + "\n")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--fast", action="store_true")
     ap.add_argument("--contest", action="store_true", help="append contest win-rate to the report")
+    ap.add_argument("--phase7", action="store_true", help="structural+GBM models + feature ablations")
     args = ap.parse_args(argv)
+
+    if args.phase7:
+        weeks = FAST_WEEKS
+        eval_weeks = (5, 11)
+        print(f"=== Phase 7: models vs baselines on weeks {list(weeks)} ===")
+        df = run_backtest(weeks, with_models=True)
+        summ = summarize(df)
+        print(f"\n{'model':14s} {'n':>6} {'MAE':>6} {'CRPS':>6} {'cov90':>6}")
+        for b in sorted(summ, key=lambda b: summ[b]["overall"]["crps"]):
+            o = summ[b]["overall"]
+            print(f"{b:14s} {o['n']:>6} {o['mae']:>6} {o['crps']:>6} {o['cov90']:>6}")
+        print(f"\n=== ablations (eval weeks {list(eval_weeks)}) ===")
+        abl = ablate(TRAIN_SEASONS, eval_weeks=eval_weeks)
+        write_phase7(summ, abl, weeks, eval_weeks)
+        print(f"\nPhase 7 appended to {OUT/'report.md'}, ablations -> {OUT/'ablations.csv'}")
+        return 0
 
     if args.contest:
         sample = [(S, w) for S in TRAIN_SEASONS for w in (5, 11)]

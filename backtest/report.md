@@ -60,3 +60,39 @@ Primary metric: CRPS (lower is better). Coverage targets: 50% and 90%.
   slightly optimistic for injury-risk players.
 - Contest win-rate backtest: scaffolded; full run in Phase 10 with the stacked model.
 - Feature ablations (ablations.csv) populate in Phase 7.
+## Phase 7: full model vs baselines (Thursday-kickoff ECR drop applied)
+
+All models scored apples-to-apples on sample weeks [3, 7, 11, 15] (4 seasons). (Phase-6 baseline numbers above are the full 16-week run.)
+
+| model | n | MAE | RMSE | CRPS | cov90 |
+|---|---|---|---|---|---|
+| **structural** | 3116 | 5.207 | 7.036 | **3.661** | 0.895 |
+| **gbm** | 3116 | 5.288 | 7.088 | **3.672** | 0.889 |
+| ecr_implied | 3116 | 5.697 | 7.281 | **3.881** | 0.845 |
+| old_plan | 3116 | 5.734 | 7.311 | **3.902** | 0.843 |
+| trailing8 | 3116 | 6.054 | 7.788 | **4.195** | 0.822 |
+| trailing_xfp | 3116 | 6.094 | 7.83 | **4.206** | 0.83 |
+
+CRPS vs ECR-implied by position (our models must beat ECR to ship, §10):
+
+| position | ecr_implied | structural | gbm | winner |
+|---|---|---|---|---|
+| QB | 4.845 | 4.501 | 4.387 | gbm |
+| RB | 3.752 | 3.673 | 3.594 | gbm |
+| WR | 3.856 | 3.572 | 3.691 | structural |
+| TE | 3.232 | 3.038 | 3.062 | structural |
+
+**Verdict:** best overall CRPS = `structural` (ECR-implied 3.881).
+Where the structural/GBM models don't beat ECR, that's reported honestly (the market is a strong baseline, §10/§19); the stacked model in Phase 10 combines whichever wins per position.
+
+## Phase 7: feature-group ablations (GBM, eval weeks [5, 11])
+
+A group ships iff the 95% bootstrap CI of its CRPS improvement excludes 0.
+
+| feature group | CRPS with | CRPS without | Δ(without−with) | 95% CI | ships |
+|---|---|---|---|---|---|
+| vegas | 3.816 | 3.787 | -0.029 | [-0.082, +0.019] | · |
+| weather | 3.816 | 3.834 | +0.018 | [-0.026, +0.067] | · |
+| participation | 3.816 | 3.79 | -0.026 | [-0.078, +0.025] | · |
+| efficiency | 3.816 | 3.787 | -0.03 | [-0.11, +0.035] | · |
+| opponent | 3.816 | 3.832 | +0.016 | [-0.023, +0.062] | · |

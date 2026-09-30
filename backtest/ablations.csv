@@ -1,1 +1,6 @@
 feature_group,position,crps_with,crps_without,delta,ci_low,ci_high,ships
+vegas,ALL,3.816,3.787,-0.029,-0.082,0.019,False
+weather,ALL,3.816,3.834,0.018,-0.026,0.067,False
+participation,ALL,3.816,3.79,-0.026,-0.078,0.025,False
+efficiency,ALL,3.816,3.787,-0.03,-0.11,0.035,False
+opponent,ALL,3.816,3.832,0.016,-0.023,0.062,False
