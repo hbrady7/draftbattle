@@ -3,18 +3,19 @@
 _Current phase, what's done, what's next, dead ends already tried. Kept current every phase._
 
 ## Current phase
-**Phase 3 — Simulator.** Next. Build `public/data/sim.json`, wire the browser Web Worker sim, and the seeded Python sim; parity within 1 pt, timing < 300 ms.
+**Phase 4 — Opponents.** Next. Build the 7 default AI profiles + `scripts/opponents.py` / `src/opponents/`; check 500-draft simulated ADP vs DB rank.
 
 ## Done
 - **Phase 0 — Audit and set up. ✅ committed `59bc525`.** Audited `draftTool` → REUSE sim (D0.3); scaffolded repo; dark 6-tab shell serves on `:5175`.
 - **Phase 1 — Data layer. ✅ committed `ab98a11`.** `data_sources.py` (every §5 source, 12h cache, leakage guards, core-source stop) + `ids.py` (name_key replica, gsis crosswalk). 68/68 source-seasons clean; DB top-200 match 100%; Sleeper live.
-- **Phase 2 — Baseline model. ✅ complete (committing now).**
-  - `scripts/distribution.py`: browser-parity port of `projDist.js` (summarize/tailSpec/invCdfWithTails/257-node table) + shape-A (template base) + (1−p_play) DNP mixture.
-  - `scripts/build_board.py`: interim mean (0.5·FFA + 0.5·ECR-implied, fallbacks, DB·0.85), backup-QB cap, `player_sd` SD, implied totals/starters from games, P(plays) rule → `public/data/board.json` (369 players) + `meta.json`.
-  - **Checks passed:** named-player rows sane (Gibbs 25.1, Allen 26.4, JSN 23.7 vs DB 17.1); §6b implied-total unit test PASS; distribution SD within 0.026 of target (0 fails); 256-node quantization + deep-scrub infeasibility disclosed.
+- **Phase 2 — Baseline model. ✅ committed `0dff88c`.** `distribution.py` (projDist.js port + shape-A template + DNP mixture) + `build_board.py` → `board.json` (369). Checks: §6b unit test, SD within 0.026, named players sane.
+- **Phase 3 — Simulator. ✅ complete (committing now).**
+  - `scripts/sim.py`: seeded numpy Gaussian-copula sim (100k), ported `build_correlations`, vectorized best-ball (validated == greedy), writes `public/data/sim.json`.
+  - `src/sim/simCore.js`: added seedable mulberry32 PRNG (`setRngSeed`). `scripts/sim_parity.mjs`: Node driver running the browser's JS sim.
+  - **Checks passed:** parity **0.25pt** (JS 20k vs Python 100k); per-pick 8×11 eval **71ms** (<300ms); simConfig reconciled to §12 (20k/40k, Python 100k).
 
 ## Next
-- Phase 3: `scripts/sim.py` (seeded, n_sim=100k) + `src/sim/` Web Worker wiring; reconcile `simConfig` N_SIM to §12; parity check browser vs Python within 1 pt, <300 ms.
+- Phase 4: default AI opponent profiles + `scripts/opponents.py` + `src/opponents/`; softmax pick model (neg DB rank + positional need, temp 0.8). **Check:** 500-draft simulated ADP vs DB rank (high rank correlation).
 
 ## Blockers / open
 - **GitHub remote still not created — push is blocked.** `git push` returns the exact error `ERROR: Repository not found` (SSH auth to `hbrady7` is confirmed working; the repo simply doesn't exist). Local commits continue each phase; all get pushed once `hbrady7/draftbattle.js` (private) exists — user to create it, or provide a PAT / install `gh`. See DECISIONS D0.7.

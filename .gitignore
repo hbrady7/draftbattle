@@ -12,5 +12,8 @@ __pycache__/
 # cached downloads (§15: data/raw is gitignored; everything else is committed)
 data/raw/
 
+# transient test artifact (deterministic synthetic draft for the parity check)
+build/_parity_draft.json
+
 # os
 .DS_Store

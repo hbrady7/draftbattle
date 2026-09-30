@@ -48,18 +48,33 @@ export function cholesky(A, n) {
   return L;
 }
 
-/** Box-Muller standard normals. */
+// Seedable PRNG (§12: "draw Z with a seeded PRNG"). Defaults to Math.random;
+// setRngSeed(seed) swaps in a deterministic mulberry32 so runs are reproducible
+// and the seed can be recorded in meta.json.
+let _rng = Math.random;
+export function setRngSeed(seed) {
+  let a = (seed >>> 0) || 1;
+  _rng = function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+export function resetRng() { _rng = Math.random; }
+
+/** Box-Muller standard normals (uses the seedable _rng). */
 export function stdNormals(count, out) {
   const arr = out ?? new Float64Array(count);
   for (let i = 0; i < count - 1; i += 2) {
-    const u1 = Math.random() || 1e-10;
-    const u2 = Math.random();
+    const u1 = _rng() || 1e-10;
+    const u2 = _rng();
     const mag = Math.sqrt(-2 * Math.log(u1));
     arr[i] = mag * Math.cos(2 * Math.PI * u2);
     arr[i + 1] = mag * Math.sin(2 * Math.PI * u2);
   }
   if (count % 2 === 1) {
-    arr[count - 1] = Math.sqrt(-2 * Math.log(Math.random() || 1e-10)) * Math.cos(2 * Math.PI * Math.random());
+    arr[count - 1] = Math.sqrt(-2 * Math.log(_rng() || 1e-10)) * Math.cos(2 * Math.PI * _rng());
   }
   return arr;
 }
