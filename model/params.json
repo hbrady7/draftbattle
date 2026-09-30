@@ -1,0 +1,69 @@
+{
+ "availability": {
+  "columns": [
+   "report_status_DOUBTFUL",
+   "report_status_NONE",
+   "report_status_OTHER",
+   "report_status_QUESTIONABLE",
+   "practice_status_DNP",
+   "practice_status_FULL",
+   "practice_status_LIMITED",
+   "practice_status_NONE",
+   "injury_group_concussion",
+   "injury_group_illness",
+   "injury_group_lower_leg",
+   "injury_group_other",
+   "injury_group_soft_tissue",
+   "injury_group_upper_body",
+   "position_QB",
+   "position_RB",
+   "position_TE",
+   "position_WR",
+   "consec_missed"
+  ],
+  "coef": {
+   "report_status_DOUBTFUL": -6.1373710027994095,
+   "report_status_NONE": 1.4549084083473465,
+   "report_status_OTHER": 4.761675643026304,
+   "report_status_QUESTIONABLE": -0.07012854834865942,
+   "practice_status_DNP": -0.49351326728181605,
+   "practice_status_FULL": 0.8261603860485641,
+   "practice_status_LIMITED": 0.7103720461584491,
+   "practice_status_NONE": -1.0339346646993477,
+   "injury_group_concussion": -0.41026916964160354,
+   "injury_group_illness": -0.18781090873974002,
+   "injury_group_lower_leg": -0.16597394166329438,
+   "injury_group_other": 1.449360992204697,
+   "injury_group_soft_tissue": -0.3551085900421021,
+   "injury_group_upper_body": -0.3211138818921131,
+   "position_QB": -0.5787427387058077,
+   "position_RB": -0.04590744332283377,
+   "position_TE": 0.34936753398099907,
+   "position_WR": 0.28436714827336773,
+   "consec_missed": -1.2652765991751367
+  },
+  "intercept": 0.009084197158530413,
+  "base_rate": 0.8918,
+  "healthy_base": 0.99,
+  "snap_mult": {
+   "QUESTIONABLE": 0.95,
+   "DOUBTFUL": 0.643,
+   "NONE": 1.0,
+   "OTHER": 1.58
+  },
+  "consec_cap": 4,
+  "fit_seasons": [
+   2022,
+   2025
+  ],
+  "n_train": 5698,
+  "vacated": {
+   "targets_to_wr_te": 0.7,
+   "targets_to_rb": 0.3,
+   "method": "proportional_within_pos"
+  }
+ },
+ "_meta": {
+  "note": "frozen model params; live build reads, never refits silently"
+ }
+}

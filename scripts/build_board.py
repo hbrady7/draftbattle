@@ -21,10 +21,13 @@ from pathlib import Path
 
 import pandas as pd
 
+import availability as avail
 import data_sources as ds
 import distribution as dist
 import ids as idmod
 import player_sd
+
+AVAIL_PARAMS = avail.load_params()   # fitted §7 model; None -> falls back to the simple rule
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "public" / "data"
@@ -131,15 +134,18 @@ def team_by_gsis():
 
 
 def injury_status():
-    """gsis -> report_status (latest week), plus late-news override file."""
+    """gsis -> {report, practice, injury} from the latest injury-report week.
+    (Run --refresh right before drafting to pull the current week's report;
+    late-news overrides in input_data/week{N}/injuries.csv win in build().)"""
     out = {}
     inj = ds.load_injuries(CURRENT_SEASON)
     if inj is not None and "gsis_id" in inj.columns:
-        inj = inj.dropna(subset=["gsis_id"]).sort_values("week")
+        inj = inj.dropna(subset=["gsis_id"]).sort_values("week")  # last write = latest week
         for _, r in inj.iterrows():
-            st = str(r.get("report_status") or "").strip().upper()
-            if st:
-                out[str(r["gsis_id"])] = st
+            out[str(r["gsis_id"])] = {
+                "report": str(r.get("report_status") or "").strip(),
+                "practice": str(r.get("practice_status") or "").strip(),
+                "injury": str(r.get("practice_primary_injury") or "").strip()}
     return out
 
 
@@ -235,9 +241,18 @@ def build():
         scores = current_team_scores(logs, gsis, team)
         rush_share = qb_rush_share(logs, gsis) if pos == "QB" else None
         sd = player_sd.player_sd(pos, mean, scores, rush_share)["sd"]
-        # availability
-        status = late.get((k,)) or inj.get(str(gsis), "")
-        p_play = PLAY_RULE.get(status, 1.0)
+        # availability (§7 fitted model; late-news wins, else report-driven, else healthy)
+        late_st = late.get((k,))
+        info = inj.get(str(gsis))
+        if late_st:
+            status = late_st
+            p_play = 0.0 if late_st == "OUT" else 1.0
+        elif info:
+            status = info["report"]
+            p_play = avail.p_plays(info["report"], info["practice"], info["injury"], pos, 0, AVAIL_PARAMS)
+        else:
+            status = ""
+            p_play = avail.p_plays("", "", "", pos, 0, AVAIL_PARAMS)
         # distribution
         d = dist.player_distribution(pos, mean, sd, p_play, scores)
         d.pop("_table", None)
@@ -305,7 +320,7 @@ def check(board):
     # (fine table, quantization negligible) — that's the modeling question. Deep
     # low-mean scrubs have structurally-infeasible SD targets on a floored support
     # and are reported, not required, at this baseline.
-    core = [p for p in board if p["p_play"] >= 0.999 and p["mean"] >= 6
+    core = [p for p in board if p["p_play"] >= 0.98 and p["mean"] >= 6
             and p["db_rank"] <= 150 and not p["flags"]["db_only"] and not p["flags"]["backup_qb"]]
     rng = random.Random(4)
     sample = rng.sample(core, min(20, len(core)))
@@ -326,9 +341,9 @@ def check(board):
           f"quantization (spec-inherent; averages out in best-ball totals).")
 
     # Transparency: full-board players whose DISTRIBUTION can't reach the target SD.
-    infeasible = [p["name"] for p in board if p["p_play"] >= 0.999
+    infeasible = [p["name"] for p in board if p["p_play"] >= 0.98
                   and abs(dist.simulated_sd(p["min"], p["max"], p["knots"], n=6000, steps=2048) - p["sd"]) > 0.1]
-    print(f"  full board: {len(infeasible)}/{sum(1 for p in board if p['p_play']>=0.999)} "
+    print(f"  full board: {len(infeasible)}/{sum(1 for p in board if p['p_play']>=0.98)} "
           f"healthy players have a structurally-infeasible SD target "
           f"(low-mean/high-SD; refined in Phase 9).")
     return fails == 0

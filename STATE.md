@@ -3,7 +3,7 @@
 _Current phase, what's done, what's next, dead ends already tried. Kept current every phase._
 
 ## Current phase
-**Phase 8 — Availability model.** Next. Fit the logistic P(plays) + E[snap share|plays] on 2019–2025 (report_status/practice_status/injury type/games-missed) and the vacated-opportunity redistribution rates. Replaces the Phase-2 simple rule.
+**Phase 9 — Distribution & correlations.** Next. Shape-A-vs-B contest + SD challenger; **empirical player-pair correlations** on 2019–2025 (PIT residuals by role-pair) to replace the 4 copula constants. Coverage within ±3pt of target.
 
 **BASELINE READY for Week 4 at localhost:5175.** (Live draft now has data-driven AI-opponent WPA — see AI-opponent work.)
 
@@ -26,8 +26,13 @@ _Current phase, what's done, what's next, dead ends already tried. Kept current 
   - **Result (post-leak-fix, weeks [3,7,11,15], n=3116): structural CRPS 3.661, gbm 3.672 beat ecr_implied 3.881 overall AND at every position; cov90 0.895/0.889 vs 0.845.** Edge is marginal (~0.2) and comes from the core's leak-free re-use of ECR + trailing; **no ablated feature group ships** (vegas/weather/participation/efficiency/opponent — all 95% CIs include 0).
   - Adversarial leakage audit: clean except the §5 Thursday-kickoff ECR drop wasn't applied → FIXED; re-run confirms the result holds.
 
+- **Phase 8 — Availability model. ✅ complete (committing now).**
+  - `scripts/availability.py`: P(plays) logistic (report/practice/injury-group/position/consec-missed), recency-weighted to the current regime, near-unregularized → reproduces empirical bucket rates. Hard rules: Out/IR→0, unlisted→0.99. Snap multiplier + vacated-opportunity redistribution (default 70/30). Frozen to `model/params.json`.
+  - **Check:** held-out 2025 model Brier **0.1277 < flat-rule 0.1370** (net improvement). Doubtful now ≈0 (was 0.25), Out 0. **Finding:** Questionable play-rate fell to ~0.58 and practice-status lost predictive power by 2025 (documented temporal drift; residual Questionable over-prediction).
+  - Integrated into `build_board.py` (replaces the flat rule); board + sim rebuilt; Phase-2 SD check still passes (0.023).
+
 ## Next
-- Phase 8: logistic availability model + vacated-opportunity redistribution → replaces the Phase-2 P(plays) rule; feeds the distribution's DNP mass.
+- Phase 9: distribution shape A/B + SD challenger + empirical correlations (replace the 4 copula constants); coverage within ±3pt.
 
 ## Side track — DONE ✅ (committed)
 - **Data-driven AI opponents** from the user's Week-4 workbook (25 rooms / 2200 picks): `scripts/ingest_ai_data.py` → `public/data/ai_opponents.json` (9 AIs, per-round position + player-share priors + ADP). Live-draft JS: `src/opponents/aiModel.js` + per-seat AI assignment in the Draft Room; `P(available)` + per-candidate **WPA** now use the real AIs. Checks: build clean, archetype-match 7/7, name join 61%, win% finite+separated. Caveat: expected-fill baseline optimistic (~80%, rigid bots + greedy self-fill) — Δ/floor are the grounded signals (DECISIONS D-AI.4).
