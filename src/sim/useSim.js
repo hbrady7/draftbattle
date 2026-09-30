@@ -19,7 +19,8 @@ export function useSim(board, sim, opponents, aiData, { universeSize = 200, nSim
     const globalToLocal = new Map(pool.map((p, i) => [p.idx, i]));
     const players = pool.map((p, i) => ({
       idx: i, id: p.id, name: p.name, nk: p.nk, position: p.position, team: p.team,
-      db_rank: p.db_rank, points: p.mean, sd_pts: p.sd, min: p.min, max: p.max, knots: p.knots,
+      db_rank: p.db_rank, points: p.mean, sd_pts: p.sd, p_play: p.p_play,
+      min: p.min, max: p.max, knots: p.knots,
     }));
     const correlations = sim.correlations
       .filter(([a, b]) => globalToLocal.has(a) && globalToLocal.has(b))

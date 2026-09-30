@@ -65,5 +65,105 @@
  },
  "_meta": {
   "note": "frozen model params; live build reads, never refits silently"
+ },
+ "correlations": {
+  "categories": {
+   "QB1-WR1": {
+    "r": 0.3477,
+    "n": 3496,
+    "empirical": 0.3477,
+    "source": "empirical"
+   },
+   "QB1-WR2": {
+    "r": 0.2778,
+    "n": 3487,
+    "empirical": 0.2778,
+    "source": "empirical"
+   },
+   "QB1-WR3": {
+    "r": 0.2008,
+    "n": 3385,
+    "empirical": 0.2008,
+    "source": "empirical"
+   },
+   "QB1-TE1": {
+    "r": 0.2597,
+    "n": 3459,
+    "empirical": 0.2597,
+    "source": "empirical"
+   },
+   "QB1-RB1": {
+    "r": 0.0747,
+    "n": 3493,
+    "empirical": 0.0747,
+    "source": "empirical"
+   },
+   "QB1-RB2": {
+    "r": 0.0205,
+    "n": 3341,
+    "empirical": 0.0205,
+    "source": "empirical"
+   },
+   "WR1-WR2": {
+    "r": 0.0265,
+    "n": 3637,
+    "empirical": 0.0265,
+    "source": "empirical"
+   },
+   "WR1-TE1": {
+    "r": 0.0163,
+    "n": 3608,
+    "empirical": 0.0163,
+    "source": "empirical"
+   },
+   "RB1-RB2": {
+    "r": -0.0123,
+    "n": 3477,
+    "empirical": -0.0123,
+    "source": "empirical"
+   },
+   "RB1-WR1": {
+    "r": 0.0219,
+    "n": 3643,
+    "empirical": 0.0219,
+    "source": "empirical"
+   },
+   "QB1-QB1_opp": {
+    "r": 0.1707,
+    "n": 3350,
+    "empirical": 0.1707,
+    "source": "empirical"
+   },
+   "QB1-WR1_opp": {
+    "r": 0.0628,
+    "n": 3496,
+    "empirical": 0.0628,
+    "source": "empirical"
+   },
+   "WR1-WR1_opp": {
+    "r": 0.0065,
+    "n": 3646,
+    "empirical": 0.0065,
+    "source": "empirical"
+   },
+   "RB1-QB1_opp": {
+    "r": 0.0544,
+    "n": 3493,
+    "empirical": 0.0544,
+    "source": "empirical"
+   },
+   "RB1-RB1_opp": {
+    "r": -0.0527,
+    "n": 3640,
+    "empirical": -0.0527,
+    "source": "empirical"
+   }
+  },
+  "fit_seasons": [
+   2019,
+   2025
+  ],
+  "min_pairs": 500,
+  "shrink_k": 120
  }
 }

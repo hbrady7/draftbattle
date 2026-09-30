@@ -3,7 +3,7 @@
 _Current phase, what's done, what's next, dead ends already tried. Kept current every phase._
 
 ## Current phase
-**Phase 9 — Distribution & correlations.** Next. Shape-A-vs-B contest + SD challenger; **empirical player-pair correlations** on 2019–2025 (PIT residuals by role-pair) to replace the 4 copula constants. Coverage within ±3pt of target.
+**Phase 9 core done; then Phase 10.** Empirical correlations + DNP-mass closed (below). Remaining Phase-9 refinements: shape-A/B contest, SD challenger, full team-total coverage validation (D9.4). Next big phase: **Phase 10 — stack weights + held-out 2025 + freeze params.**
 
 **BASELINE READY for Week 4 at localhost:5175.** (Live draft now has data-driven AI-opponent WPA — see AI-opponent work.)
 
@@ -31,8 +31,13 @@ _Current phase, what's done, what's next, dead ends already tried. Kept current 
   - **Check:** held-out 2025 model Brier **0.1277 < flat-rule 0.1370** (net improvement). Doubtful now ≈0 (was 0.25), Out 0. **Finding:** Questionable play-rate fell to ~0.58 and practice-status lost predictive power by 2025 (documented temporal drift; residual Questionable over-prediction).
   - Integrated into `build_board.py` (replaces the flat rule); board + sim rebuilt; Phase-2 SD check still passes (0.023).
 
+- **Phase 9 — Distribution & correlations. ◑ core done (committing now).**
+  - `scripts/correlations.py`: empirical role-pair correlations (2019–2025) replace the 4 copula constants — **QB1–WR1 = 0.35** (vs 0.15), all 15 categories empirical (3,300+ pairs). Wired into `sim.build_correlations` → sim.json 433 correlations; parity holds.
+  - **DNP mass (closes D0.4):** `p_play` in sim.json; both sims apply the `(1−p_play)` zero-mass (p_play<0.999 only → parity 0.01pt). Win% now discounts injured players.
+  - Remaining: shape-A/B contest, SD challenger, team-total coverage validation (D9.4).
+
 ## Next
-- Phase 9: distribution shape A/B + SD challenger + empirical correlations (replace the 4 copula constants); coverage within ±3pt.
+- Finish Phase-9 refinements (D9.4), then Phase 10 (per-position stack weights + single held-out 2025 eval + freeze params.json), then Phase 11 (wire full model into make_week + live tracking/--score + Opponents/Results/Model tabs + README).
 
 ## Side track — DONE ✅ (committed)
 - **Data-driven AI opponents** from the user's Week-4 workbook (25 rooms / 2200 picks): `scripts/ingest_ai_data.py` → `public/data/ai_opponents.json` (9 AIs, per-round position + player-share priors + ADP). Live-draft JS: `src/opponents/aiModel.js` + per-seat AI assignment in the Draft Room; `P(available)` + per-candidate **WPA** now use the real AIs. Checks: build clean, archetype-match 7/7, name join 61%, win% finite+separated. Caveat: expected-fill baseline optimistic (~80%, rigid bots + greedy self-fill) — Δ/floor are the grounded signals (DECISIONS D-AI.4).

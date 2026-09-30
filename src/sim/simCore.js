@@ -141,12 +141,14 @@ export function buildSimMatrix(playerList, correlations, nSim, onProgress) {
   const tables = new Array(N);
   const mu = new Float64Array(N);
   const sd = new Float64Array(N);
+  const pPlay = new Float64Array(N);     // §8 P(plays); (1-p) chance of a 0
   const usePdf = new Uint8Array(N);
   let nPdf = 0;
   for (let i = 0; i < N; i++) {
     const p = byIdx[i];
     mu[i] = p?.points ?? 0;
     sd[i] = Math.max(0.5, p?.sd_pts ?? 4);
+    pPlay[i] = p?.p_play ?? 1;
     if (hasPdf(p)) {
       usePdf[i] = 1;
       tables[i] = buildInvCdfTable(p.min, p.max, p.knots);
@@ -171,6 +173,7 @@ export function buildSimMatrix(playerList, correlations, nSim, onProgress) {
       } else {
         val = mu[i] + sd[i] * yi;
       }
+      if (pPlay[i] < 0.999 && _rng() >= pPlay[i]) val = 0;  // §8 did-not-play mass
       mat[base + i] = val > 0 ? val : 0;
     }
   }

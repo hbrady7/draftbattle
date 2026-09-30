@@ -34,9 +34,17 @@ FLEX_ALLOWED = POS_MASK["RB"] | POS_MASK["WR"] | POS_MASK["TE"]
 
 # ---------------------------------------------- correlations (buildCorrelations port)
 def build_correlations(players, team_to_opp):
-    """Port of simCore.buildCorrelations: 4 base constants, same/opp game pairs."""
-    BASE_SAME = {"QB-WR": 0.15, "QB-TE": 0.15, "QB-RB": 0.05}
-    BASE_OPP = {"QB-QB": 0.20}
+    """Empirical §9 role-pair correlations (model/params.json), 4 skeleton constants
+    as fallback. Roles = within-team rank by projected points."""
+    import correlations as corr_mod
+    cats = corr_mod.load_categories() or {}
+    FALLBACK = {"QB1-WR1": 0.15, "QB1-WR2": 0.15, "QB1-WR3": 0.15, "QB1-TE1": 0.15,
+                "QB1-RB1": 0.05, "QB1-RB2": 0.05, "QB1-QB1_opp": 0.20}
+
+    def rcat(name):
+        d = cats.get(name)
+        return float(d["r"]) if d else FALLBACK.get(name, 0.0)
+
     corr = {}
 
     def add(i, j, rho):
@@ -50,31 +58,38 @@ def build_correlations(players, team_to_opp):
     for p in players:
         by_team.setdefault(p.get("team") or "", []).append(p)
 
-    for plist in by_team.values():
-        qbs = sorted([p for p in plist if p["position"] == "QB"],
-                     key=lambda p: -(p.get("points") or 0))
-        if not qbs:
-            continue
-        q = qbs[0]
-        for r in [p for p in plist if p["position"] in ("WR", "TE")]:
-            add(q["idx"], r["idx"], BASE_SAME.get(f"QB-{r['position']}", 0.0))
-        for rb in [p for p in plist if p["position"] == "RB"]:
-            add(q["idx"], rb["idx"], BASE_SAME["QB-RB"])
+    def roles(plist):
+        out = {}
+        for pos, labels in (("QB", ["QB1"]), ("RB", ["RB1", "RB2"]),
+                            ("WR", ["WR1", "WR2", "WR3"]), ("TE", ["TE1"])):
+            ranked = sorted([p for p in plist if p["position"] == pos], key=lambda p: -(p.get("points") or 0))
+            for lab, pl in zip(labels, ranked):
+                out[lab] = pl
+        return out
 
+    team_roles = {t: roles(pl) for t, pl in by_team.items()}
+    SAME = [("QB1", "WR1"), ("QB1", "WR2"), ("QB1", "WR3"), ("QB1", "TE1"), ("QB1", "RB1"),
+            ("QB1", "RB2"), ("WR1", "WR2"), ("WR1", "TE1"), ("RB1", "RB2"), ("RB1", "WR1")]
+    for rr in team_roles.values():
+        for a, b in SAME:
+            if a in rr and b in rr:
+                add(rr[a]["idx"], rr[b]["idx"], rcat(f"{a}-{b}"))
+
+    OPP = [("QB1", "QB1", "QB1-QB1_opp"), ("QB1", "WR1", "QB1-WR1_opp"),
+           ("WR1", "WR1", "WR1-WR1_opp"), ("RB1", "QB1", "RB1-QB1_opp"), ("RB1", "RB1", "RB1-RB1_opp")]
     seen = set()
     for team, opp in team_to_opp.items():
         gk = "@".join(sorted([team, opp]))
         if gk in seen:
             continue
         seen.add(gk)
-        ti, oi = by_team.get(team, []), by_team.get(opp, [])
-        tq = sorted([p for p in ti if p["position"] == "QB"], key=lambda p: -(p.get("points") or 0))
-        oq = sorted([p for p in oi if p["position"] == "QB"], key=lambda p: -(p.get("points") or 0))
-        ts, os_ = (tq[0]["idx"] if tq else -1), (oq[0]["idx"] if oq else -1)
-        for a in ti:
-            for b in oi:
-                if a["position"] == "QB" and b["position"] == "QB" and a["idx"] == ts and b["idx"] == os_:
-                    add(a["idx"], b["idx"], BASE_OPP["QB-QB"])
+        tr, orr = team_roles.get(team, {}), team_roles.get(opp, {})
+        for a, b, cat in OPP:
+            r = rcat(cat)
+            if a in tr and b in orr:
+                add(tr[a]["idx"], orr[b]["idx"], r)
+            if b in tr and a in orr:
+                add(tr[b]["idx"], orr[a]["idx"], r)
     return sorted([[i, j, rho] for (i, j), rho in corr.items()])
 
 
@@ -135,6 +150,13 @@ def sample_scores(players, correlations, n_sim, seed):
         else:
             scores[:, i] = mu[i] + sd[i] * Y[:, i]
     np.clip(scores, 0, None, out=scores)
+    # §8 DNP mixture: with prob (1 - p_play) the player scores 0 (didn't play).
+    pplay = np.array([p.get("p_play", 1.0) for p in players])
+    dnp = np.where(pplay < 0.999)[0]
+    if len(dnp):
+        udnp = rng.random((n_sim, len(dnp)))
+        for k, i in enumerate(dnp):
+            scores[udnp[:, k] >= pplay[i], i] = 0.0
     return scores, scale
 
 
@@ -234,7 +256,7 @@ def board_to_sim_players(board):
     for i, p in enumerate(board):
         out.append({"idx": i, "id": p["id"], "name": p["name"], "position": p["position"],
                     "team": p.get("team"), "db_rank": p.get("db_rank"),  # opponent model needs this
-                    "points": p.get("mean"), "sd_pts": p.get("sd"),
+                    "points": p.get("mean"), "sd_pts": p.get("sd"), "p_play": p.get("p_play", 1.0),
                     "min": p.get("min"), "max": p.get("max"), "knots": p.get("knots")})
     return out
 
