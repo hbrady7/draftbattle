@@ -233,7 +233,8 @@ def board_to_sim_players(board):
     out = []
     for i, p in enumerate(board):
         out.append({"idx": i, "id": p["id"], "name": p["name"], "position": p["position"],
-                    "team": p.get("team"), "points": p.get("mean"), "sd_pts": p.get("sd"),
+                    "team": p.get("team"), "db_rank": p.get("db_rank"),  # opponent model needs this
+                    "points": p.get("mean"), "sd_pts": p.get("sd"),
                     "min": p.get("min"), "max": p.get("max"), "knots": p.get("knots")})
     return out
 

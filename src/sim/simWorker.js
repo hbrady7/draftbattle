@@ -3,10 +3,12 @@
  *
  * IN : { type:'INIT', players, correlations, profiles, seed, nSim }
  *      { type:'SCORE', rostersByTeam, myTeam, chunkId }          // current-rosters floor
- *      { type:'FILL',  myRoster, currentRosters, availableIdx, pickIndex, myTeam, fills, chunkId }
+ *      { type:'FILL',  rostersByTeam, availableIdx, pickIndex, myTeam, fills, chunkId }
+ *      { type:'EVALUATE', rostersByTeam, availableIdx, pickIndex, myTeam, candidateLocalIdxs, fills, chunkId }
  * OUT: { type:'READY', N, nSim, nPdf }
  *      { type:'SCORE_RESULT', winPct, myMean, p05, p95, rank, teamMeans, chunkId }
  *      { type:'FILL_RESULT', winPct, chunkId }
+ *      { type:'EVALUATE_RESULT', baseline, results:[{localIdx, winPct}], chunkId }   // §12 per-candidate win%
  */
 import { buildSimMatrix, bestBallTeamScores, setRngSeed, N_TEAMS } from "./simCore.js";
 import { completeDraft, teamForPick } from "./draftSim.js";
@@ -70,6 +72,35 @@ self.onmessage = (e) => {
       winSum += winAndStats(rosterIdxs, m.myTeam).winPct;
     }
     self.postMessage({ type: "FILL_RESULT", winPct: winSum / fills, chunkId: m.chunkId });
+    return;
+  }
+  if (m.type === "EVALUATE") {
+    // §12 recommendations: for each candidate, put him on my roster now, complete
+    // the draft via the §13 opponent model K times, and average my resulting win%.
+    // Also returns the baseline (auto-pick this slot) so the UI can show the +gain.
+    const fills = m.fills ?? 12;
+    const rows = (idxs) => idxs.map((li) => ({ player: players[li] }));
+    const myBase = rows(m.rostersByTeam[m.myTeam]);
+    const otherRosters = m.rostersByTeam.filter((_, t) => t !== m.myTeam).map(rows);
+    const avail = (drop) => m.availableIdx.filter((li) => li !== drop).map((li) => players[li]);
+
+    const meanFill = (myRoster, available, fromPick) => {
+      let sum = 0;
+      for (let f = 0; f < fills; f++) {
+        const rosterIdxs = completeDraft(myRoster, otherRosters, available, fromPick, m.myTeam,
+          { profiles, rng: Math.random });
+        sum += winAndStats(rosterIdxs, m.myTeam).winPct;
+      }
+      return sum / fills;
+    };
+
+    // baseline = let the auto-drafter fill my current slot (nothing forced)
+    const baseline = meanFill(myBase, m.availableIdx.map((li) => players[li]), m.pickIndex);
+    const results = m.candidateLocalIdxs.map((cand) => ({
+      localIdx: cand,
+      winPct: meanFill([...myBase, { player: players[cand] }], avail(cand), m.pickIndex + 1),
+    }));
+    self.postMessage({ type: "EVALUATE_RESULT", baseline, results, chunkId: m.chunkId });
     return;
   }
 };

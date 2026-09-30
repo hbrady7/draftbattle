@@ -58,5 +58,8 @@ export function useSim(board, sim, opponents, { universeSize = 200, nSim = 12000
     /** rostersByTeam + availableIdx: LOCAL idx arrays. */
     fill: (rostersByTeam, availableIdx, pickIndex, myTeam, fills = 30) =>
       call({ type: "FILL", rostersByTeam, availableIdx, pickIndex, myTeam, fills }),
+    /** §12 per-candidate win%: resolves { baseline, results:[{localIdx, winPct}] }. */
+    evaluate: (rostersByTeam, availableIdx, pickIndex, myTeam, candidateLocalIdxs, fills = 12) =>
+      call({ type: "EVALUATE", rostersByTeam, availableIdx, pickIndex, myTeam, candidateLocalIdxs, fills }),
   };
 }

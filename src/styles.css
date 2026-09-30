@@ -146,6 +146,21 @@ body {
 .sideboard input { width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 4px; padding: 6px 8px; margin-bottom: 6px; }
 .side-list { max-height: 360px; overflow-y: auto; }
 
+/* rich recommendation cards (§12 per-candidate win%) */
+.rec2 { display: flex; gap: 8px; align-items: flex-start; padding: 6px; border-radius: 5px; border-bottom: 1px solid var(--border); }
+.rec2.pickable { cursor: pointer; }
+.rec2.pickable:hover { background: var(--panel); }
+.rec-main { flex: 1; min-width: 0; }
+.rec-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rec-win { font-weight: 800; color: var(--accent); font-size: 14px; white-space: nowrap; }
+.rec-win em { font-style: normal; font-size: 11px; font-weight: 700; margin-left: 1px; }
+.rec-win em.pos { color: var(--pos-rb); }
+.rec-win em.neg { color: var(--pos-qb); }
+.rec-sub { font-size: 11px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-sub2 { display: flex; gap: 10px; font-size: 11px; margin-top: 2px; }
+.rec-sub2 span { color: var(--muted); }
+.rec-base { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border); }
+
 /* ---- Data ---- */
 .data-tab { display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
 .card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }

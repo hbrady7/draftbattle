@@ -33,7 +33,9 @@ function pSurvive(player, available, picksLen, my0, profiles) {
   return surv;
 }
 
-function buildRecs(available, myRoster, picksLen, my0, profiles) {
+// Candidate set to evaluate (§12): best-available per position + top by need-weighted
+// projection, up to `count`. Win% for each is computed by the sim (EVALUATE).
+function candidateSet(available, myRoster, picksLen, my0, profiles, count = 12) {
   const counts = { QB: 0, RB: 0, WR: 0, TE: 0 };
   for (const p of myRoster) counts[p.position] = (counts[p.position] || 0) + 1;
   const scored = available.map((p) => ({ p, score: (p.mean ?? 0) * needMul(counts, p.position) }));
@@ -44,9 +46,9 @@ function buildRecs(available, myRoster, picksLen, my0, profiles) {
     const best = scored.find((s) => s.p.position === pos);
     if (best && !picked.has(best.p.id)) { picked.add(best.p.id); recs.push(best); }
   }
-  for (const s of scored) { if (recs.length >= 8) break; if (!picked.has(s.p.id)) { picked.add(s.p.id); recs.push(s); } }
-  return recs.slice(0, 8).sort((a, b) => b.score - a.score)
-    .map(({ p }) => ({ p, pSurv: pSurvive(p, available, picksLen, my0, profiles) }));
+  for (const s of scored) { if (recs.length >= count) break; if (!picked.has(s.p.id)) { picked.add(s.p.id); recs.push(s); } }
+  return recs.slice(0, count)
+    .map(({ p, score }) => ({ p, score, pSurv: pSurvive(p, available, picksLen, my0, profiles) }));
 }
 
 export default function DraftRoomTab({ board, sim, opponents }) {
@@ -56,6 +58,9 @@ export default function DraftRoomTab({ board, sim, opponents }) {
   const simApi = useSim(board, sim, opponents, { universeSize: 200, nSim: 12000 });
   const [win, setWin] = useState({ floor: null, fill: null });
   const [myStats, setMyStats] = useState(null);
+  const [recWin, setRecWin] = useState(null);    // { id: winPct } per candidate (§12)
+  const [recBase, setRecBase] = useState(null);   // auto-pick baseline win%
+  const [recLoading, setRecLoading] = useState(false);
 
   const byId = useMemo(() => new Map(board.map((p) => [p.id, p])), [board]);
   const draftedIds = useMemo(() => new Set(picks.map((p) => p.id)), [picks]);
@@ -93,8 +98,34 @@ export default function DraftRoomTab({ board, sim, opponents }) {
   }, [available, search]);
 
   const recs = useMemo(
-    () => (opponents ? buildRecs(available, rostersByTeam[my0], picks.length, my0, opponents.profiles) : []),
+    () => (opponents ? candidateSet(available, rostersByTeam[my0], picks.length, my0, opponents.profiles, 12) : []),
     [available, rostersByTeam, picks.length, my0, opponents]);
+
+  // §12 per-candidate win%: only when it's my pick (ranks what to draft *now*).
+  useEffect(() => {
+    if (!simApi.ready || !simApi.universe || !opponents) return;
+    if (currentTeam !== my0) { setRecWin(null); setRecBase(null); setRecLoading(false); return; }
+    const localOf = simApi.universe.localOf;
+    const rLocal = rostersByTeam.map((t) => t.map((p) => localOf.get(p.id)).filter((x) => x != null));
+    const availableIdx = simApi.universe.players.filter((p) => !draftedIds.has(p.id)).map((p) => p.idx);
+    const candLocal = recs.map(({ p }) => localOf.get(p.id)).filter((x) => x != null);
+    if (!candLocal.length) return;
+    let cancel = false; setRecLoading(true);
+    simApi.evaluate(rLocal, availableIdx, currentOverall, my0, candLocal, 12).then((res) => {
+      if (cancel) return;
+      const map = {};
+      for (const r of res.results) { const pl = simApi.universe.players[r.localIdx]; if (pl) map[pl.id] = r.winPct; }
+      setRecWin(map); setRecBase(res.baseline); setRecLoading(false);
+    });
+    return () => { cancel = true; };
+  }, [picks, simApi.ready, currentTeam, my0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Rank candidates by win% when available (else by need-weighted projection), top 8.
+  const ranked = useMemo(() => {
+    const arr = recs.map((r) => ({ ...r, winPct: recWin?.[r.p.id] }));
+    if (recWin) arr.sort((a, b) => (b.winPct ?? -1) - (a.winPct ?? -1));
+    return arr.slice(0, 8);
+  }, [recs, recWin]);
 
   const draft = (id) => setPicks([...picks, { overall: picks.length, team: teamForPick(picks.length), id }]);
   const undo = () => setPicks(picks.slice(0, -1));
@@ -190,15 +221,41 @@ export default function DraftRoomTab({ board, sim, opponents }) {
 
         <div className="dr-side">
           <div className="recs">
-            <h3>Recommendations {currentTeam === my0 ? "(your pick)" : "(your next pick)"}</h3>
-            {recs.map(({ p, pSurv }) => (
-              <div key={p.id} className="rec" onClick={() => currentTeam === my0 && draft(p.id)}>
-                <span className="rec-pos" style={{ color: posColor(p.position) }}>{p.position}</span>
-                <span className="rec-name">{p.name}</span>
-                <span className="rec-mean">{p.mean?.toFixed(1)}</span>
-                <span className="rec-surv" title="P(available at your next pick)">{(pSurv * 100).toFixed(0)}%</span>
-              </div>
-            ))}
+            <h3>
+              {currentTeam === my0 ? "Pick now — win% by player" : "Your next pick (projection)"}
+              {recLoading && <span className="muted small"> · simulating…</span>}
+            </h3>
+            {ranked.map(({ p, pSurv, winPct }) => {
+              const delta = (winPct != null && recBase != null) ? winPct - recBase : null;
+              const ci = p.ci90 || [p.p05, p.p95];
+              return (
+                <div key={p.id} className={"rec2" + (currentTeam === my0 ? " pickable" : "")}
+                     onClick={() => currentTeam === my0 && draft(p.id)}>
+                  <span className="rec-pos" style={{ color: posColor(p.position) }}>{p.position}</span>
+                  <div className="rec-main">
+                    <div className="rec-top">
+                      <span className="rec-name">{p.name}</span>
+                      {currentTeam === my0 && (
+                        <span className="rec-win">
+                          {winPct != null ? `${winPct.toFixed(1)}%` : (recLoading ? "…" : "—")}
+                          {delta != null && <em className={delta >= 0 ? "pos" : "neg"}> {delta >= 0 ? "+" : ""}{delta.toFixed(1)}</em>}
+                        </span>
+                      )}
+                    </div>
+                    <div className="rec-sub">
+                      {p.team}{p.opp ? ` vs ${p.opp}` : ""}{p.implied_total != null ? ` · ${p.implied_total.toFixed(0)} implied` : ""}
+                    </div>
+                    <div className="rec-sub2">
+                      <span>{p.mean?.toFixed(1)} pts</span>
+                      {ci?.[0] != null && <span>CI {ci[0].toFixed(0)}–{ci[1].toFixed(0)}</span>}
+                      <span title="P(available at your next pick)">avail {(pSurv * 100).toFixed(0)}%</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {currentTeam === my0 && recBase != null &&
+              <div className="rec-base muted small">Δ vs auto-pick baseline ({recBase.toFixed(1)}%) · contest baseline 12.5%</div>}
           </div>
           <div className="sideboard">
             <input placeholder="search to draft…" value={search} onChange={(e) => setSearch(e.target.value)} />
