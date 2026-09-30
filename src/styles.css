@@ -156,6 +156,18 @@ body {
 .seat-select { font-weight: 700; color: var(--accent); }
 .seat-select select { font-weight: 700; margin-left: 6px; background: var(--panel); color: var(--accent); border: 1px solid var(--accent-dim); border-radius: 4px; padding: 2px 6px; }
 
+/* ---- Draft plan (exploits the deterministic bots) ---- */
+.draftplan { order: -2; background: var(--panel-2); border: 1px solid var(--accent-dim); border-radius: 8px; padding: 10px; }
+.draftplan h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin: 0 0 8px; }
+.plan-row { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 2px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.plan-row.plan-now { background: #14201a; border-radius: 4px; }
+.plan-r { color: var(--muted); width: 26px; font-weight: 700; }
+.plan-name { font-weight: 600; }
+.plan-rk { color: var(--muted); font-size: 11px; }
+.plan-steal { font-size: 9px; font-weight: 700; color: var(--bg); background: var(--accent); border-radius: 3px; padding: 0 4px; text-transform: uppercase; }
+.plan-why { flex: 1 1 100%; margin-left: 32px; }
+.plan-foot { margin-top: 8px; }
+
 /* rich recommendation cards (§12 per-candidate win%) */
 .rec2 { display: flex; gap: 8px; align-items: flex-start; padding: 6px; border-radius: 5px; border-bottom: 1px solid var(--border); }
 .rec2.pickable { cursor: pointer; }

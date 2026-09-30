@@ -50,3 +50,7 @@ _Current phase, what's done, what's next, dead ends already tried. Kept current 
 
 ## Dead ends tried
 - `gh` CLI, `brew`, `~/.git-credentials`, credential helper, keychain github item, `*TOKEN*` env var — all absent. SSH auth to `hbrady7` is the only GitHub auth; repo creation had to be done by the user (done).
+
+## Draft plan (deterministic bots) — added
+- Bots now draft DETERMINISTICALLY (highest-ranked available at their script position), so the whole draft is exactly predictable. `who-falls-to-you` is an exact sequential sim, not an estimate.
+- `src/opponents/draftPlan.js` `planDraft()`: forward-sims the full snake draft and returns MY optimal pick each round — grab the best need-weighted player who WON'T survive to my next pick; defer fallers to the last round before a bot takes them. Shown in the Draft Room "Your draft plan" panel (re-plans live). Check: `node scripts/plan_check.mjs` (seat-4 plan legal + steal detected).

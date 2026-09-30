@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SLOT_ORDER, teamForPick, pickMeta } from "../sim/bbDraftLogic.js";
 import { pickProbabilities } from "../opponents/pickModel.js";
 import { pickProbabilities as aiPickProbs, aiByName, deterministicPickIndex, roundPos } from "../opponents/aiModel.js";
+import { planDraft } from "../opponents/draftPlan.js";
 import { useSim } from "../sim/useSim.js";
 import { posColor } from "../lib/viz.jsx";
 
@@ -180,6 +181,12 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
     return available.map((p, i) => ({ p, pct: pr[i] * 100, kind: "prob" })).sort((a, b) => b.pct - a.pct).slice(0, 3);
   }, [currentTeam, my0, ranked, currentOverall, aiEnabled, aiSeats, aiMap, available, aiData, opponents, rostersByTeam]);
 
+  // Full optimal plan for MY remaining picks vs the deterministic bots (re-plans as
+  // picks come off the board). Exploits exact bot timing: fallers slot late.
+  const plan = useMemo(
+    () => (aiEnabled && aiSeats.length ? planDraft({ board, aiData, aiSeats, mySeat, picks }) : []),
+    [board, aiData, aiSeats, mySeat, picks, aiEnabled]);
+
   const draft = (id) => setPicks([...picks, { overall: picks.length, team: teamForPick(picks.length), id }]);
   const undo = () => setPicks(picks.slice(0, -1));
   const reset = () => setPicks([]);
@@ -244,7 +251,7 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
           <span className="muted small">Opponents — real AI models from {aiData.meta?.rooms ?? 25} rooms · assign each seat:</span>
           {Array.from({ length: N_TEAMS }, (_, t) => (t !== my0 ? (
             <label key={t} className="ai-seat">
-              <span className="ai-seat-n">T{t + 1}</span>
+              <span className="ai-seat-n">Seat {t + 1}</span>
               <select value={aiSeats[t] ?? ""}
                 onChange={(e) => { const v = e.target.value; setAiSeats((prev) => { const n = [...prev]; n[t] = v || null; return n; }); }}>
                 {usableAis.map((a) => <option key={a.name} value={a.name}>{a.name}</option>)}
@@ -300,6 +307,23 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
         </div>
 
         <div className="dr-side">
+          {aiEnabled && plan.length > 0 && (
+            <div className="draftplan">
+              <h3>Your draft plan · seat {mySeat}
+                <span className="muted small"> — optimal vs these bots</span></h3>
+              {plan.map((pk) => (
+                <div key={pk.overall} className={"plan-row" + (pk.overall === currentOverall ? " plan-now" : "")}>
+                  <span className="plan-r">R{pk.round}</span>
+                  <span className="rec-pos" style={{ color: posColor(pk.player.position) }}>{pk.player.position}</span>
+                  <span className="plan-name">{pk.player.name}</span>
+                  <span className="plan-rk" title="draft-page rank">#{pk.rank}</span>
+                  {pk.steal >= 2 && <span className="plan-steal" title="you get him rounds later than his rank — the bots ignore him">steal</span>}
+                  <span className="plan-why muted small">{pk.rationale}</span>
+                </div>
+              ))}
+              <div className="muted small plan-foot">Re-plans as picks come off the board. High-value fallers are slotted at the last round before a bot takes them — spend early picks on players who won't come back.</div>
+            </div>
+          )}
           <div className="recs">
             <h3>
               {currentTeam === my0 ? "Pick now — win% + value (who'll fall)" : "Your next pick (projection)"}
