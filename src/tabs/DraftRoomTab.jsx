@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { SLOT_ORDER, teamForPick, pickMeta } from "../sim/bbDraftLogic.js";
 import { pickProbabilities } from "../opponents/pickModel.js";
-import { pickProbabilities as aiPickProbs, aiByName } from "../opponents/aiModel.js";
+import { pickProbabilities as aiPickProbs, aiByName, deterministicPickIndex, roundPos } from "../opponents/aiModel.js";
 import { useSim } from "../sim/useSim.js";
 import { posColor } from "../lib/viz.jsx";
 
@@ -14,26 +14,29 @@ function needMul(counts, pos) {
   return c < t ? 2.2 : c < t + 2 ? 1.2 : 0.5;
 }
 
-/** P(player still available at my next pick) over interim opponent picks.
- *  ctx = { aiEnabled, aiSeats, aiMap, adp, profiles } — uses the data-driven AI
- *  model (real 25-room behavior) per seat when enabled, else the synthetic model. */
-function pSurvive(player, available, picksLen, my0, ctx) {
-  const idx = available.findIndex((p) => p.id === player.id);
-  if (idx < 0) return 1;
-  let o = picksLen, surv = 1, steps = 0;
-  if (teamForPick(o) === my0) o++;
-  while (o < N_TEAMS * N_ROUNDS && teamForPick(o) !== my0 && steps < 14) {
+/** Deterministically play the bots out from the current pick until my next pick,
+ *  removing each pick from a working pool — so "who falls to you" is EXACT (a bot
+ *  taking WR1 correctly leaves WR2 for the next WR-seeking bot). Returns the Set of
+ *  player ids gone before my next pick. AI seats use the script+rank model; synthetic
+ *  seats fall back to their softmax argmax. */
+function interimGone(available, picksLen, my0, ctx) {
+  const gone = new Set();
+  let o = picksLen, steps = 0;
+  if (teamForPick(o) === my0) o++;                 // my current pick is mine, skip it
+  const pool = available.slice();
+  while (o < N_TEAMS * N_ROUNDS && teamForPick(o) !== my0 && steps < 24) {
     const team = teamForPick(o), round = Math.floor(o / N_TEAMS) + 1;
-    let pr = null;
+    let idx = -1;
     if (ctx.aiEnabled && ctx.aiSeats?.[team] && ctx.aiMap[ctx.aiSeats[team]]) {
-      pr = aiPickProbs(available, ctx.aiMap[ctx.aiSeats[team]], round, { adp: ctx.adp });
+      idx = deterministicPickIndex(pool, ctx.aiMap[ctx.aiSeats[team]], round, null);
     } else if (ctx.profiles) {
-      pr = pickProbabilities(available, { QB: 0, RB: 0, WR: 0, TE: 0 }, [], ctx.profiles[team]);
+      const pr = pickProbabilities(pool, { QB: 0, RB: 0, WR: 0, TE: 0 }, [], ctx.profiles[team]);
+      idx = pr.reduce((b, x, i) => (x > pr[b] ? i : b), 0);
     }
-    if (pr) surv *= (1 - (pr[idx] || 0));
+    if (idx >= 0 && idx < pool.length) { gone.add(pool[idx].id); pool.splice(idx, 1); }
     o++; steps++;
   }
-  return surv;
+  return gone;
 }
 
 // Candidate set to evaluate (§12): best-available per position + top by need-weighted
@@ -50,8 +53,9 @@ function candidateSet(available, myRoster, picksLen, my0, ctx, count = 12) {
     if (best && !picked.has(best.p.id)) { picked.add(best.p.id); recs.push(best); }
   }
   for (const s of scored) { if (recs.length >= count) break; if (!picked.has(s.p.id)) { picked.add(s.p.id); recs.push(s); } }
+  const gone = interimGone(available, picksLen, my0, ctx);   // exact deterministic who-falls
   return recs.slice(0, count)
-    .map(({ p, score }) => ({ p, score, pSurv: pSurvive(p, available, picksLen, my0, ctx) }));
+    .map(({ p, score }) => ({ p, score, pSurv: gone.has(p.id) ? 0 : 1 }));
 }
 
 export default function DraftRoomTab({ board, sim, opponents, aiData }) {
@@ -265,7 +269,7 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
                     return (
                       <td key={t} className={"cell" + (t === my0 ? " me-col" : "") + (isNext ? " on-clock" : "")}>
                         {p ? <span style={{ borderLeft: `3px solid ${posColor(p.position)}`, paddingLeft: 4 }}>
-                          <b>{p.position}</b> {p.name.split(" ").slice(-1)[0]}</span> : (isNext ? "◄" : "")}
+                          <b>{p.position}</b> {p.name.split(" ")[0]}</span> : (isNext ? "◄" : "")}
                       </td>
                     );
                   })}
@@ -288,7 +292,7 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
                     pr = pickProbabilities(available, counts, [], opponents.profiles[t]);
                   }
                   return available.map((p, i) => ({ p, pr: pr[i] })).sort((a, b) => b.pr - a.pr).slice(0, 3)
-                    .map(({ p, pr }) => <span key={p.id} className="pred-chip">{p.name.split(" ").slice(-1)[0]} {(pr * 100).toFixed(0)}%</span>);
+                    .map(({ p, pr }) => <span key={p.id} className="pred-chip">{p.name.split(" ")[0]} {(pr * 100).toFixed(0)}%</span>);
                 })()}
               </div>
             ))}

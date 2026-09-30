@@ -29,38 +29,68 @@ export function aiByName(aiData) {
  * Per-available-player pick weight for one AI at a 1-based round.
  * available: [{ nk?, name, position }]. adp: global name_key -> {draft_pct}.
  */
-export function pickScores(available, ai, round, adp = null) {
-  const pbr = (ai?.pos_by_round && ai.pos_by_round[String(round)]) || null;
-  return available.map((p) => {
-    const nk = p.nk ?? nameKey(p.name);
-    const posW = pbr ? (pbr[p.position] ?? 0) : 0.25;              // P(pos | AI, round)
-    const prior = ai?.priors && ai.priors[nk];
-    let playerW;
-    if (prior) playerW = prior.share;                              // the AI's own target prior
-    else if (adp && adp[nk]) playerW = 0.15 * (adp[nk].draft_pct ?? 0) + 1e-3;  // ADP baseline
-    else playerW = 1e-3;                                           // unseen: tiny epsilon
-    return Math.max(1e-9, posW) * Math.max(1e-3, playerW);
-  });
+// The bots draft DETERMINISTICALLY: the highest-ranked available player (by the
+// draft-page ranking = db_rank) at the position their observed script calls for.
+// Given the ranking + each bot's script + your picks, the whole draft is exact.
+const QB_CAP = 2;                                        // a 3rd QB can never score (SF)
+function rankOf(p) { return (p && (p.db_rank ?? p.rank)) ?? 9999; }
+function eligible(p, counts) {
+  if (counts && p.position === "QB" && (counts.QB || 0) >= QB_CAP) return false;
+  return true;
 }
 
-/** Softmax-ish over weights with a temperature exponent (temp<1 sharpens). */
-export function pickProbabilities(available, ai, round, { adp = null, temperature = 0.8 } = {}) {
-  const s = pickScores(available, ai, round, adp);
-  const w = s.map((x) => Math.pow(Math.max(1e-12, x), 1 / Math.max(1e-6, temperature)));
-  const sum = w.reduce((a, b) => a + b, 0) || 1;
-  return w.map((e) => e / sum);
+/** The position this AI drafts in a given 1-based round — its observed script. */
+export function roundPos(ai, round) {
+  const rs = ai?.round_script;
+  if (rs && rs.length) return rs[Math.max(0, Math.min(rs.length - 1, round - 1))] || null;
+  const pbr = ai?.pos_by_round && ai.pos_by_round[String(round)];
+  if (pbr) return Object.keys(pbr).reduce((a, b) => ((pbr[b] ?? 0) > (pbr[a] ?? 0) ? b : a));
+  return null;
 }
 
+/** Deterministic pick index: best-ranked available at the scripted position,
+ *  fallback to best-ranked available among usable slots. -1 if none. */
+export function deterministicPickIndex(available, ai, round, counts = null) {
+  if (!available || !available.length) return -1;
+  const pos = roundPos(ai, round);
+  let bi = -1, br = Infinity;
+  for (let i = 0; i < available.length; i++) {                 // 1) scripted position
+    const p = available[i];
+    if (p.position !== pos || !eligible(p, counts)) continue;
+    const r = rankOf(p); if (r < br) { br = r; bi = i; }
+  }
+  if (bi >= 0) return bi;
+  for (let i = 0; i < available.length; i++) {                 // 2) best-available usable
+    if (!eligible(available[i], counts)) continue;
+    const r = rankOf(available[i]); if (r < br) { br = r; bi = i; }
+  }
+  if (bi >= 0) return bi;
+  return available.reduce((b, p, i) => (rankOf(p) < rankOf(available[b]) ? i : b), 0);  // all capped
+}
+
+/** One-hot deterministic "probabilities": the scripted pick is certain (1.0). */
+export function pickProbabilities(available, ai, round, opts = {}) {
+  const idx = deterministicPickIndex(available, ai, round, opts.counts ?? null);
+  const pr = new Array(available.length).fill(0);
+  if (idx >= 0) pr[idx] = 1;
+  return pr;
+}
+
+/** Deterministic — rng ignored (the bots don't randomize). opts.counts enforces the QB cap. */
 export function samplePick(available, ai, round, rng = Math.random, opts = {}) {
-  const pr = pickProbabilities(available, ai, round, opts);
-  let r = rng();
-  for (let i = 0; i < pr.length; i++) { r -= pr[i]; if (r <= 0) return i; }
-  for (let i = pr.length - 1; i >= 0; i--) if (pr[i] > 0) return i;
-  return 0;
+  const i = deterministicPickIndex(available, ai, round, opts.counts ?? null);
+  return i >= 0 ? i : 0;
 }
 
-/** Top-k most likely next picks for an AI (the "predicted next" strip). */
+/** The certain next pick (100%) + the next-in-line at that position, for context. */
 export function topPredicted(available, ai, round, k = 3, opts = {}) {
-  const pr = pickProbabilities(available, ai, round, opts);
-  return available.map((p, i) => ({ p, pr: pr[i] })).sort((a, b) => b.pr - a.pr).slice(0, k);
+  const counts = opts.counts ?? null;
+  const idx = deterministicPickIndex(available, ai, round, counts);
+  const pos = roundPos(ai, round);
+  const out = idx >= 0 ? [{ p: available[idx], pr: 1 }] : [];
+  const rest = available.map((p, i) => ({ p, i }))
+    .filter(({ p, i }) => i !== idx && p.position === pos && eligible(p, counts))
+    .sort((a, b) => rankOf(a.p) - rankOf(b.p)).slice(0, Math.max(0, k - 1));
+  for (const { p } of rest) out.push({ p, pr: 0 });
+  return out.slice(0, k);
 }

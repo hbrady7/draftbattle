@@ -175,7 +175,7 @@ export function completeDraft(myRoster, otherRosters, available, pickIndex, myTe
     } else if (aiBySeat && aiBySeat[team]) {
       // Opponent picks: data-driven AI model (real 25-room behavior).
       const round = Math.floor(pi / N_TEAMS) + 1; // 1-based
-      const k = aiSamplePick(pool, aiBySeat[team], round, rng, { adp, temperature: aiTemp });
+      const k = aiSamplePick(pool, aiBySeat[team], round, rng, { adp, counts: posCounts[team] });
       best = pool[k]; bestAt = k;
     } else if (profiles) {
       // Opponent picks: §13 synthetic softmax model (fallback when no AI data).
