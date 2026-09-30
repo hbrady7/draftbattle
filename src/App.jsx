@@ -49,7 +49,7 @@ export default function App() {
         {!data.loading && !data.error && (
           <>
             {tab === "board" && <BoardTab board={data.board} />}
-            {tab === "draft" && <DraftRoomTab board={data.board} sim={data.sim} opponents={data.opponents} />}
+            {tab === "draft" && <DraftRoomTab board={data.board} sim={data.sim} opponents={data.opponents} aiData={data.aiData} />}
             {tab === "data" && <DataTab meta={data.meta} />}
             {PLACEHOLDER[tab] && (
               <div className="panel">
