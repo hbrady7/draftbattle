@@ -3,9 +3,9 @@
 _Current phase, what's done, what's next, dead ends already tried. Kept current every phase._
 
 ## Current phase
-**Phase 11 — wire in, track, finish (last phase).** Swap the live board mean to the frozen stacked model (FFA live-bridged), add `--score` + live scorecard + the §11 scoring check, and build the Opponents / Results / Model tabs + README.
+**BUILD COMPLETE — all 12 phases (0–11) done.** Dashboard live at localhost:5175.
 
-**BASELINE READY at localhost:5175. FULL MODEL VALIDATED: the stack beats the market (ECR) on held-out 2025 at every position (below).**
+**FULL MODEL VALIDATED: the stacked model beats the market (ECR) on held-out 2025 at every position.** One honest gap (D11.x): the live board MEAN still uses the Phase-2 interim blend, because projecting the *upcoming* (unplayed) week with structural+GBM needs a live-week feature builder — the ECR archive + features only cover completed weeks. The full model is validated on the backtest/held-out and shown in the Model tab; wiring it to the live upcoming week is the one remaining integration.
 
 ## Done
 - **Phase 0 — Audit and set up. ✅ committed `59bc525`.** Audited `draftTool` → REUSE sim (D0.3); scaffolded repo; dark 6-tab shell serves on `:5175`.

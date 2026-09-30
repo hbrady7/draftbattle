@@ -1,5 +1,5 @@
 {
- "built_at": "2026-09-30T19:57:32.008830+00:00",
+ "built_at": "2026-09-30T20:53:38.078182+00:00",
  "week": 4,
  "season": 2026,
  "n_players": 369,
@@ -20,5 +20,12 @@
  "mean_recipe": "0.5*FFA + 0.5*ECR-implied (interim); fallback FFA -> ECR -> DB*0.85",
  "phase": "2 baseline",
  "db_only": 68,
- "backup_qb": 3
+ "backup_qb": 3,
+ "scoring_check": {
+  "ffa_matches": "4pt",
+  "n": 24,
+  "hit4": 16,
+  "hit6": 8,
+  "ok": true
+ }
 }

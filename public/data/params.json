@@ -1,0 +1,276 @@
+{
+ "availability": {
+  "columns": [
+   "report_status_DOUBTFUL",
+   "report_status_NONE",
+   "report_status_OTHER",
+   "report_status_QUESTIONABLE",
+   "practice_status_DNP",
+   "practice_status_FULL",
+   "practice_status_LIMITED",
+   "practice_status_NONE",
+   "injury_group_concussion",
+   "injury_group_illness",
+   "injury_group_lower_leg",
+   "injury_group_other",
+   "injury_group_soft_tissue",
+   "injury_group_upper_body",
+   "position_QB",
+   "position_RB",
+   "position_TE",
+   "position_WR",
+   "consec_missed"
+  ],
+  "coef": {
+   "report_status_DOUBTFUL": -6.1373710027994095,
+   "report_status_NONE": 1.4549084083473465,
+   "report_status_OTHER": 4.761675643026304,
+   "report_status_QUESTIONABLE": -0.07012854834865942,
+   "practice_status_DNP": -0.49351326728181605,
+   "practice_status_FULL": 0.8261603860485641,
+   "practice_status_LIMITED": 0.7103720461584491,
+   "practice_status_NONE": -1.0339346646993477,
+   "injury_group_concussion": -0.41026916964160354,
+   "injury_group_illness": -0.18781090873974002,
+   "injury_group_lower_leg": -0.16597394166329438,
+   "injury_group_other": 1.449360992204697,
+   "injury_group_soft_tissue": -0.3551085900421021,
+   "injury_group_upper_body": -0.3211138818921131,
+   "position_QB": -0.5787427387058077,
+   "position_RB": -0.04590744332283377,
+   "position_TE": 0.34936753398099907,
+   "position_WR": 0.28436714827336773,
+   "consec_missed": -1.2652765991751367
+  },
+  "intercept": 0.009084197158530413,
+  "base_rate": 0.8918,
+  "healthy_base": 0.99,
+  "snap_mult": {
+   "QUESTIONABLE": 0.95,
+   "DOUBTFUL": 0.643,
+   "NONE": 1.0,
+   "OTHER": 1.58
+  },
+  "consec_cap": 4,
+  "fit_seasons": [
+   2022,
+   2025
+  ],
+  "n_train": 5698,
+  "vacated": {
+   "targets_to_wr_te": 0.7,
+   "targets_to_rb": 0.3,
+   "method": "proportional_within_pos"
+  }
+ },
+ "_meta": {
+  "note": "frozen model params; live build reads, never refits silently"
+ },
+ "correlations": {
+  "categories": {
+   "QB1-WR1": {
+    "r": 0.3477,
+    "n": 3496,
+    "empirical": 0.3477,
+    "source": "empirical"
+   },
+   "QB1-WR2": {
+    "r": 0.2778,
+    "n": 3487,
+    "empirical": 0.2778,
+    "source": "empirical"
+   },
+   "QB1-WR3": {
+    "r": 0.2008,
+    "n": 3385,
+    "empirical": 0.2008,
+    "source": "empirical"
+   },
+   "QB1-TE1": {
+    "r": 0.2597,
+    "n": 3459,
+    "empirical": 0.2597,
+    "source": "empirical"
+   },
+   "QB1-RB1": {
+    "r": 0.0747,
+    "n": 3493,
+    "empirical": 0.0747,
+    "source": "empirical"
+   },
+   "QB1-RB2": {
+    "r": 0.0205,
+    "n": 3341,
+    "empirical": 0.0205,
+    "source": "empirical"
+   },
+   "WR1-WR2": {
+    "r": 0.0265,
+    "n": 3637,
+    "empirical": 0.0265,
+    "source": "empirical"
+   },
+   "WR1-TE1": {
+    "r": 0.0163,
+    "n": 3608,
+    "empirical": 0.0163,
+    "source": "empirical"
+   },
+   "RB1-RB2": {
+    "r": -0.0123,
+    "n": 3477,
+    "empirical": -0.0123,
+    "source": "empirical"
+   },
+   "RB1-WR1": {
+    "r": 0.0219,
+    "n": 3643,
+    "empirical": 0.0219,
+    "source": "empirical"
+   },
+   "QB1-QB1_opp": {
+    "r": 0.1707,
+    "n": 3350,
+    "empirical": 0.1707,
+    "source": "empirical"
+   },
+   "QB1-WR1_opp": {
+    "r": 0.0628,
+    "n": 3496,
+    "empirical": 0.0628,
+    "source": "empirical"
+   },
+   "WR1-WR1_opp": {
+    "r": 0.0065,
+    "n": 3646,
+    "empirical": 0.0065,
+    "source": "empirical"
+   },
+   "RB1-QB1_opp": {
+    "r": 0.0544,
+    "n": 3493,
+    "empirical": 0.0544,
+    "source": "empirical"
+   },
+   "RB1-RB1_opp": {
+    "r": -0.0527,
+    "n": 3640,
+    "empirical": -0.0527,
+    "source": "empirical"
+   }
+  },
+  "fit_seasons": [
+   2019,
+   2025
+  ],
+  "min_pairs": 500,
+  "shrink_k": 120
+ },
+ "stack": {
+  "weights_by_pos": {
+   "QB": {
+    "structural": 0.3239,
+    "gbm": 0.4653,
+    "ecr_implied": 0.2108,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   },
+   "RB": {
+    "structural": 0.2726,
+    "gbm": 0.4224,
+    "ecr_implied": 0.3051,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   },
+   "WR": {
+    "structural": 0.6874,
+    "gbm": 0.0782,
+    "ecr_implied": 0.2344,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   },
+   "TE": {
+    "structural": 0.4368,
+    "gbm": 0.3613,
+    "ecr_implied": 0.2018,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   }
+  },
+  "models": [
+   "structural",
+   "gbm",
+   "ecr_implied",
+   "trailing8",
+   "trailing_xfp"
+  ],
+  "fit_window": "2021-2024 walk-forward",
+  "held_out": "2025",
+  "weeks_sampled": [
+   3,
+   7,
+   11,
+   15
+  ],
+  "shape_by_pos": {
+   "QB": "B",
+   "RB": "B",
+   "WR": "B",
+   "TE": "B"
+  },
+  "live_bridge": {
+   "until_logged_weeks": 6,
+   "ffa_takes": "ecr_implied weight, 50/50 with ecr",
+   "db_weight": 0
+  },
+  "held_out_verdict": {
+   "QB": {
+    "stack_crps": 4.298,
+    "ecr_crps": 4.667,
+    "stack_mae": 6.077,
+    "ecr_mae": 6.562,
+    "beats_ecr": true,
+    "best_single": "gbm",
+    "best_single_crps": 4.231,
+    "cov90_stack": 0.922
+   },
+   "RB": {
+    "stack_crps": 3.482,
+    "ecr_crps": 3.583,
+    "stack_mae": 5.059,
+    "ecr_mae": 5.201,
+    "beats_ecr": true,
+    "best_single": "gbm",
+    "best_single_crps": 3.479,
+    "cov90_stack": 0.921
+   },
+   "WR": {
+    "stack_crps": 3.487,
+    "ecr_crps": 3.776,
+    "stack_mae": 5.204,
+    "ecr_mae": 5.671,
+    "beats_ecr": true,
+    "best_single": "gbm",
+    "best_single_crps": 3.378,
+    "cov90_stack": 0.908
+   },
+   "TE": {
+    "stack_crps": 3.548,
+    "ecr_crps": 3.868,
+    "stack_mae": 5.048,
+    "ecr_mae": 5.385,
+    "beats_ecr": true,
+    "best_single": "structural",
+    "best_single_crps": 3.547,
+    "cov90_stack": 0.875
+   }
+  },
+  "player_cov90": {
+   "QB": 0.922,
+   "RB": 0.921,
+   "WR": 0.908,
+   "TE": 0.875
+  },
+  "metric": "CRPS (primary), MAE"
+ }
+}

@@ -3,6 +3,9 @@ import { useData } from "./lib/useData.js";
 import BoardTab from "./tabs/BoardTab.jsx";
 import DraftRoomTab from "./tabs/DraftRoomTab.jsx";
 import DataTab from "./tabs/DataTab.jsx";
+import ModelTab from "./tabs/ModelTab.jsx";
+import OpponentsTab from "./tabs/OpponentsTab.jsx";
+import ResultsTab from "./tabs/ResultsTab.jsx";
 
 const TABS = [
   { id: "board", label: "Board" },
@@ -12,12 +15,6 @@ const TABS = [
   { id: "model", label: "Model" },
   { id: "data", label: "Data" },
 ];
-
-const PLACEHOLDER = {
-  opponents: "Seven editable AI profiles (weights, temperature, notes) + Test replay. Profiles are built and drive the live draft now; the editor UI lands in Phase 11.",
-  results: "After scoring a played week (python make_week.py --score): each of my players vs his 90% CI, contest coverage, portfolio report. Phase 11.",
-  model: "Backtest + live scorecard, PIT histogram, 90% coverage by position, stack weights, ablation table. Phases 6–11.",
-};
 
 export default function App() {
   const [tab, setTab] = useState("board");
@@ -43,7 +40,7 @@ export default function App() {
         ))}
       </nav>
 
-      <main className={tab === "draft" ? "panel-wide" : "panel"}>
+      <main className={tab === "draft" ? "panel-wide" : (tab === "board" || tab === "data") ? "panel" : "panelhost"}>
         {data.loading && <div className="placeholder">Loading build data…</div>}
         {data.error && <div className="placeholder error">Failed to load /data/*.json — run <code>npm run week -- --week 4</code> first.<br />{data.error}</div>}
         {!data.loading && !data.error && (
@@ -51,12 +48,9 @@ export default function App() {
             {tab === "board" && <BoardTab board={data.board} />}
             {tab === "draft" && <DraftRoomTab board={data.board} sim={data.sim} opponents={data.opponents} aiData={data.aiData} />}
             {tab === "data" && <DataTab meta={data.meta} />}
-            {PLACEHOLDER[tab] && (
-              <div className="panel">
-                <h1 className="panel-title">{TABS.find((t) => t.id === tab).label}</h1>
-                <div className="placeholder"><span className="placeholder-badge">later phase</span><p>{PLACEHOLDER[tab]}</p></div>
-              </div>
-            )}
+            {tab === "model" && <ModelTab backtest={data.backtest} params={data.params} scorecard={data.scorecard} />}
+            {tab === "opponents" && <OpponentsTab aiData={data.aiData} />}
+            {tab === "results" && <ResultsTab scorecard={data.scorecard} />}
           </>
         )}
       </main>

@@ -187,3 +187,25 @@ body {
 .dropzone.over { border-color: var(--accent); color: var(--accent); }
 .preview-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 8px; }
 .preview-table th, .preview-table td { border: 1px solid var(--border); padding: 3px 5px; text-align: left; white-space: nowrap; }
+
+/* ---- Model / Opponents / Results tabs ---- */
+.panelhost { padding: 24px 28px; }
+.callout { border: 1px solid var(--pos-rb); border-radius: 8px; padding: 10px 14px; margin: 4px 0 16px; background: var(--panel); font-size: 13px; color: var(--text); }
+.sec { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 20px 0 8px; }
+.mtab { border-collapse: collapse; font-size: 12.5px; margin-bottom: 4px; }
+.mtab th { text-align: left; color: var(--muted); font-weight: 600; padding: 4px 12px 4px 0; border-bottom: 1px solid var(--border); }
+.mtab td { padding: 4px 12px 4px 0; border-bottom: 1px solid #12191533; }
+.mtab .num { text-align: right; font-variant-numeric: tabular-nums; }
+.mtab .strong { font-weight: 700; color: var(--accent); }
+.mtab .good { color: var(--pos-rb); } .mtab .bad { color: var(--pos-qb); }
+.mtab .dim, .dim { color: var(--muted); }
+.ai-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.ai-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.ai-card-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.ai-card-name { font-weight: 800; color: var(--accent); }
+.ai-card-arch { font-size: 12px; color: var(--text); }
+.ai-script { display: flex; gap: 2px; margin-bottom: 10px; }
+.ai-r { font-size: 10px; font-weight: 700; width: 20px; text-align: center; border: 1px solid var(--border); border-radius: 3px; padding: 1px 0; }
+.ai-target { display: flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 1px 0; }
+.ai-target-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-target-share { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }

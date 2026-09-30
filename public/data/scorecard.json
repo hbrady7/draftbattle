@@ -1,0 +1,502 @@
+{
+ "season": 2026,
+ "week": 3,
+ "scored_at": "2026-09-30T20:56:44.871513+00:00",
+ "coverage90": 0.889,
+ "coverage90_by_pos": {
+  "QB": 0.924,
+  "RB": 0.917,
+  "WR": 0.899,
+  "TE": 0.821
+ },
+ "mae_by_pos": {
+  "QB": 4.92,
+  "RB": 3.37,
+  "WR": 3.87,
+  "TE": 3.44
+ },
+ "n": 450,
+ "model": "ecr_implied (shippable market+); full stack validated on held-out (Model tab)",
+ "my_results": [
+  {
+   "name": "Jahmyr Gibbs",
+   "position": "RB",
+   "actual": 41.4,
+   "p05": 6.67,
+   "p95": 35.58,
+   "in_ci": false
+  },
+  {
+   "name": "Jaxon Smith-Njigba",
+   "position": "WR",
+   "actual": 35.5,
+   "p05": 5.97,
+   "p95": 38.58,
+   "in_ci": true
+  },
+  {
+   "name": "Brock Purdy",
+   "position": "QB",
+   "actual": 34.2,
+   "p05": 11.43,
+   "p95": 37.67,
+   "in_ci": true
+  },
+  {
+   "name": "Sam Darnold",
+   "position": "QB",
+   "actual": 33.5,
+   "p05": 0.5,
+   "p95": 24.89,
+   "in_ci": false
+  },
+  {
+   "name": "Geno Smith",
+   "position": "QB",
+   "actual": 30.2,
+   "p05": 5.41,
+   "p95": 31.54,
+   "in_ci": true
+  },
+  {
+   "name": "Tyler Shough",
+   "position": "QB",
+   "actual": 29.4,
+   "p05": 8.72,
+   "p95": 34.82,
+   "in_ci": true
+  },
+  {
+   "name": "Jacoby Brissett",
+   "position": "QB",
+   "actual": 28.4,
+   "p05": 4.09,
+   "p95": 29.9,
+   "in_ci": true
+  },
+  {
+   "name": "Brock Bowers",
+   "position": "TE",
+   "actual": 27.6,
+   "p05": 2.18,
+   "p95": 27.23,
+   "in_ci": false
+  },
+  {
+   "name": "Bo Nix",
+   "position": "QB",
+   "actual": 27.0,
+   "p05": 5.5,
+   "p95": 31.61,
+   "in_ci": true
+  },
+  {
+   "name": "Case Keenum",
+   "position": "QB",
+   "actual": 27.0,
+   "p05": 0.0,
+   "p95": 14.83,
+   "in_ci": false
+  },
+  {
+   "name": "Matthew Stafford",
+   "position": "QB",
+   "actual": 26.8,
+   "p05": 5.41,
+   "p95": 31.54,
+   "in_ci": true
+  },
+  {
+   "name": "Garrett Wilson",
+   "position": "WR",
+   "actual": 26.7,
+   "p05": 3.31,
+   "p95": 31.23,
+   "in_ci": true
+  },
+  {
+   "name": "Aaron Rodgers",
+   "position": "QB",
+   "actual": 26.6,
+   "p05": 1.89,
+   "p95": 27.02,
+   "in_ci": true
+  },
+  {
+   "name": "Joe Burrow",
+   "position": "QB",
+   "actual": 26.4,
+   "p05": 8.72,
+   "p95": 34.82,
+   "in_ci": true
+  },
+  {
+   "name": "George Kittle",
+   "position": "TE",
+   "actual": 26.2,
+   "p05": 0.94,
+   "p95": 22.36,
+   "in_ci": false
+  },
+  {
+   "name": "Michael Wilson",
+   "position": "WR",
+   "actual": 25.9,
+   "p05": 1.37,
+   "p95": 25.49,
+   "in_ci": false
+  },
+  {
+   "name": "Ja'Marr Chase",
+   "position": "WR",
+   "actual": 24.8,
+   "p05": 5.12,
+   "p95": 36.31,
+   "in_ci": true
+  },
+  {
+   "name": "Kirk Cousins",
+   "position": "QB",
+   "actual": 24.7,
+   "p05": 3.63,
+   "p95": 29.29,
+   "in_ci": true
+  },
+  {
+   "name": "Juwan Johnson",
+   "position": "TE",
+   "actual": 24.3,
+   "p05": 0.51,
+   "p95": 20.09,
+   "in_ci": false
+  },
+  {
+   "name": "Harold Fannin Jr.",
+   "position": "TE",
+   "actual": 24.1,
+   "p05": 0.42,
+   "p95": 19.49,
+   "in_ci": false
+  },
+  {
+   "name": "Kenyon Sadiq",
+   "position": "TE",
+   "actual": 23.5,
+   "p05": 0.02,
+   "p95": 15.76,
+   "in_ci": false
+  },
+  {
+   "name": "Trevor Lawrence",
+   "position": "QB",
+   "actual": 22.6,
+   "p05": 9.04,
+   "p95": 35.14,
+   "in_ci": true
+  },
+  {
+   "name": "Josh Allen",
+   "position": "QB",
+   "actual": 22.5,
+   "p05": 12.74,
+   "p95": 39.25,
+   "in_ci": true
+  },
+  {
+   "name": "Lamar Jackson",
+   "position": "QB",
+   "actual": 22.3,
+   "p05": 12.14,
+   "p95": 38.51,
+   "in_ci": true
+  },
+  {
+   "name": "Marcus Mariota",
+   "position": "QB",
+   "actual": 22.2,
+   "p05": 0.0,
+   "p95": 20.91,
+   "in_ci": false
+  },
+  {
+   "name": "Jared Goff",
+   "position": "QB",
+   "actual": 22.1,
+   "p05": 9.44,
+   "p95": 35.53,
+   "in_ci": true
+  },
+  {
+   "name": "Derrick Henry",
+   "position": "RB",
+   "actual": 21.9,
+   "p05": 4.21,
+   "p95": 30.66,
+   "in_ci": true
+  },
+  {
+   "name": "Jeremiyah Love",
+   "position": "RB",
+   "actual": 21.9,
+   "p05": 1.46,
+   "p95": 24.15,
+   "in_ci": true
+  },
+  {
+   "name": "Kyren Williams",
+   "position": "RB",
+   "actual": 21.8,
+   "p05": 2.12,
+   "p95": 25.79,
+   "in_ci": true
+  },
+  {
+   "name": "Dak Prescott",
+   "position": "QB",
+   "actual": 21.7,
+   "p05": 9.44,
+   "p95": 35.53,
+   "in_ci": true
+  },
+  {
+   "name": "Deshaun Watson",
+   "position": "QB",
+   "actual": 21.7,
+   "p05": 3.23,
+   "p95": 28.77,
+   "in_ci": true
+  },
+  {
+   "name": "Christian McCaffrey",
+   "position": "RB",
+   "actual": 21.6,
+   "p05": 5.59,
+   "p95": 33.57,
+   "in_ci": true
+  },
+  {
+   "name": "Kenneth Walker III",
+   "position": "RB",
+   "actual": 21.3,
+   "p05": 6.67,
+   "p95": 35.58,
+   "in_ci": true
+  },
+  {
+   "name": "Tee Higgins",
+   "position": "WR",
+   "actual": 21.0,
+   "p05": 1.62,
+   "p95": 26.31,
+   "in_ci": true
+  },
+  {
+   "name": "Kalif Raymond",
+   "position": "WR",
+   "actual": 21.0,
+   "p05": 0.01,
+   "p95": 17.31,
+   "in_ci": false
+  },
+  {
+   "name": "Davante Adams",
+   "position": "WR",
+   "actual": 20.7,
+   "p05": 2.45,
+   "p95": 28.74,
+   "in_ci": true
+  },
+  {
+   "name": "Jaylen Warren",
+   "position": "RB",
+   "actual": 20.6,
+   "p05": 2.02,
+   "p95": 25.55,
+   "in_ci": true
+  },
+  {
+   "name": "James Cook III",
+   "position": "RB",
+   "actual": 20.4,
+   "p05": 3.4,
+   "p95": 28.83,
+   "in_ci": true
+  },
+  {
+   "name": "Tyler Higbee",
+   "position": "TE",
+   "actual": 20.2,
+   "p05": 0.0,
+   "p95": 9.23,
+   "in_ci": false
+  },
+  {
+   "name": "CeeDee Lamb",
+   "position": "WR",
+   "actual": 20.2,
+   "p05": 3.9,
+   "p95": 32.97,
+   "in_ci": true
+  },
+  {
+   "name": "Jordan Addison",
+   "position": "WR",
+   "actual": 20.0,
+   "p05": 0.5,
+   "p95": 21.84,
+   "in_ci": true
+  },
+  {
+   "name": "Luther Burden III",
+   "position": "WR",
+   "actual": 19.8,
+   "p05": 0.71,
+   "p95": 22.89,
+   "in_ci": true
+  },
+  {
+   "name": "Chris Olave",
+   "position": "WR",
+   "actual": 19.7,
+   "p05": 3.31,
+   "p95": 31.23,
+   "in_ci": true
+  },
+  {
+   "name": "Terry McLaurin",
+   "position": "WR",
+   "actual": 19.7,
+   "p05": 0.71,
+   "p95": 22.89,
+   "in_ci": true
+  },
+  {
+   "name": "Patrick Mahomes II",
+   "position": "QB",
+   "actual": 19.4,
+   "p05": 11.03,
+   "p95": 37.26,
+   "in_ci": true
+  },
+  {
+   "name": "Jakobi Meyers",
+   "position": "WR",
+   "actual": 19.4,
+   "p05": 0.18,
+   "p95": 19.8,
+   "in_ci": true
+  },
+  {
+   "name": "Noah Fant",
+   "position": "TE",
+   "actual": 19.3,
+   "p05": 0.0,
+   "p95": 11.9,
+   "in_ci": false
+  },
+  {
+   "name": "Konata Mumpfield",
+   "position": "WR",
+   "actual": 19.3,
+   "p05": 0.0,
+   "p95": 9.2,
+   "in_ci": false
+  },
+  {
+   "name": "Wan'Dale Robinson",
+   "position": "WR",
+   "actual": 18.7,
+   "p05": 0.11,
+   "p95": 19.22,
+   "in_ci": true
+  },
+  {
+   "name": "Javonte Williams",
+   "position": "RB",
+   "actual": 18.3,
+   "p05": 2.95,
+   "p95": 27.78,
+   "in_ci": true
+  },
+  {
+   "name": "Keenan Allen",
+   "position": "WR",
+   "actual": 18.3,
+   "p05": 0.02,
+   "p95": 18.42,
+   "in_ci": true
+  },
+  {
+   "name": "Bryce Young",
+   "position": "QB",
+   "actual": 17.6,
+   "p05": 5.41,
+   "p95": 31.54,
+   "in_ci": true
+  },
+  {
+   "name": "Bhayshul Tuten",
+   "position": "RB",
+   "actual": 17.0,
+   "p05": 1.46,
+   "p95": 24.15,
+   "in_ci": true
+  },
+  {
+   "name": "Trey McBride",
+   "position": "TE",
+   "actual": 16.5,
+   "p05": 3.22,
+   "p95": 30.78,
+   "in_ci": true
+  },
+  {
+   "name": "Justin Herbert",
+   "position": "QB",
+   "actual": 16.0,
+   "p05": 6.26,
+   "p95": 32.45,
+   "in_ci": true
+  },
+  {
+   "name": "Rashee Rice",
+   "position": "WR",
+   "actual": 15.8,
+   "p05": 1.96,
+   "p95": 27.31,
+   "in_ci": true
+  },
+  {
+   "name": "Deebo Samuel Sr.",
+   "position": "WR",
+   "actual": 15.4,
+   "p05": 1.62,
+   "p95": 26.31,
+   "in_ci": true
+  },
+  {
+   "name": "Zay Flowers",
+   "position": "WR",
+   "actual": 15.4,
+   "p05": 0.71,
+   "p95": 22.89,
+   "in_ci": true
+  },
+  {
+   "name": "Jalen Hurts",
+   "position": "QB",
+   "actual": 15.2,
+   "p05": 11.03,
+   "p95": 37.26,
+   "in_ci": true
+  },
+  {
+   "name": "George Pickens",
+   "position": "WR",
+   "actual": 15.2,
+   "p05": 2.45,
+   "p95": 28.74,
+   "in_ci": true
+  }
+ ]
+}

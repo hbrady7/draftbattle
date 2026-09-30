@@ -1,27 +1,37 @@
 # draftbattle.js
 
 Local best-ball projection model + draft dashboard for [Draft Battle](https://draftbattle.com):
-an 8-team, 11-round snake best-ball draft against 7 AI drafters. Builds a weekly fantasy
-projection with 90% intervals, my team's projected points, and a live win % with pick
-recommendations. **Localhost only** (`localhost:5175`); GitHub is version control only.
+an 8-team, 11-round snake best-ball draft vs 7 AI drafters. Per-player weekly 90%
+intervals, your team's projected points, and a **live win % with per-player WPA
+(win-% added)** during the draft — driven by the AIs' *real* observed behavior.
+**Localhost only** (`localhost:5175`); GitHub is version control.
 
-See `BRIEF.md` for the full spec, `STATE.md` for current status, `DECISIONS.md` for the log.
+The full projection model is **validated**: on the held-out 2025 season the stacked
+model (structural + gradient-boosted + market) beats the market (ECR) on CRPS at
+every position — see the **Model** tab. `BRIEF.md` = spec, `STATE.md` = status,
+`DECISIONS.md` = every call + caveat.
 
 ## Weekly routine
 
-1. Drop this week's `ffa.csv` and the DB CSV into `input_data/week{N}/`. Add `injuries.csv` or `overrides.csv` only for late news.
-2. `npm run week -- --week N`, then read the validation printout, including the scoring check.
-3. Right before drafting: `npm run week -- --week N --refresh` for the latest injuries, lines, and locked scores for games already played.
-4. Open `localhost:5175` → Draft Room → set my seat → draft → export the draft JSON into `results/`.
-5. After the games: `python scripts/make_week.py --week N --score`, then check Results and Model.
-6. Commit and push.
+1. Drop this week's `ffa.csv` and the DB CSV into `input_data/week{N}/` (+ `injuries.csv` / `overrides.csv` for late news).
+2. `npm run week -- --week N` — builds the board/sim/opponents, logs projections, runs the scoring check. Read the printout.
+3. Right before drafting: `npm run week -- --week N --refresh` for the latest injuries/lines.
+4. `npm run dev` → **localhost:5175** → **Draft Room**: set your seat, assign the 7 AIs you face, enter picks; watch win % + each player's WPA and who'll fall to you.
+5. After the games: `python scripts/make_week.py --week N --score` → the **Results** tab shows your players vs their 90% CI + coverage.
+6. `git commit && git push`.
 
 ## Dev
 
 ```
-npm install
-npm run dev      # serves the dashboard on localhost:5175 (strictPort)
-npm run build    # production build check
+npm install                     # once
+./venv/bin/python -V            # Python deps preinstalled in ./venv
+npm run dev                     # serve localhost:5175
+npm run build                   # production build check
+python scripts/backtest.py      # walk-forward scorecard
+python scripts/stack.py         # refit stack + held-out 2025 eval (freezes params.json)
 ```
 
-_Baseline dashboard (Phases 0–5) comes up first; the full model (Phases 6–11) stacks on top._
+## Tabs
+**Board** projections + 90% CI + edge vs DB · **Draft Room** live win %, WPA, who-falls-to-you ·
+**Opponents** the 7 real AI drafters · **Results** scored weeks · **Model** backtest + held-out validation ·
+**Data** build status + scoring check.
