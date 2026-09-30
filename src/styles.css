@@ -1,0 +1,66 @@
+/* Dark, black/dark-green with a single yellow accent that means "me".
+   Position colors appear only as thin left borders (defined here for later use). */
+:root {
+  --bg: #0a0f0c;
+  --panel: #0e1712;
+  --panel-2: #0c130f;
+  --border: #1c2a22;
+  --text: #d7e2da;
+  --muted: #7b8a80;
+  --accent: #f5d90a;       /* "me" */
+  --accent-dim: #b9a406;
+  --pos-qb: #e0607a;
+  --pos-rb: #46c68a;
+  --pos-wr: #4aa3f0;
+  --pos-te: #d99a3a;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app { display: flex; flex-direction: column; min-height: 100%; }
+
+.topbar {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.brand { font-weight: 700; letter-spacing: 0.02em; }
+.brand-mark { color: var(--accent); margin-right: 6px; }
+.brand-sub { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 12px; }
+.build-status {
+  color: var(--accent); font-size: 12px; font-weight: 600;
+  border: 1px solid var(--accent-dim); border-radius: 4px; padding: 2px 8px;
+}
+
+.tabs { display: flex; gap: 2px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+.tab {
+  background: transparent; border: none; color: var(--muted);
+  padding: 10px 16px; font-size: 13px; cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.tab:hover { color: var(--text); }
+.tab-active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+
+.panel { padding: 24px 28px; max-width: 1100px; }
+.panel-title { font-size: 20px; margin: 0 0 6px; }
+.panel-note { color: var(--muted); margin: 0 0 20px; max-width: 640px; }
+
+.placeholder {
+  border: 1px dashed var(--border); border-radius: 8px;
+  padding: 28px; background: var(--panel); color: var(--muted);
+}
+.placeholder-badge {
+  display: inline-block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--accent); border: 1px solid var(--accent-dim);
+  border-radius: 4px; padding: 2px 8px; margin-bottom: 10px;
+}

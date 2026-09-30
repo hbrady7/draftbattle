@@ -1,0 +1,16 @@
+# dependencies / build
+node_modules/
+dist/
+.vite/
+
+# python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# cached downloads (§15: data/raw is gitignored; everything else is committed)
+data/raw/
+
+# os
+.DS_Store

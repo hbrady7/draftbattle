@@ -1,0 +1,13 @@
+{
+  "_note": "Full-PPR, skeleton default (ffb_pipeline.py game_line_points). pass_td=4. The §11 scoring check compares FFA against 4 vs 6 pass-TD and flags mismatches. Change here and it propagates everywhere points are scored.",
+  "pass_yd": 0.05,
+  "pass_td": 4,
+  "interception": -1,
+  "rush_yd": 0.1,
+  "rush_td": 6,
+  "rec_yd": 0.1,
+  "rec_td": 6,
+  "reception": 1,
+  "fumble_lost": -1,
+  "two_pt": 2
+}
