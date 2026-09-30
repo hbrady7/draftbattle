@@ -60,6 +60,7 @@ def _score_df(df):
             + S["interception"] * col("passing_interceptions") + S["rush_yd"] * col("rushing_yards")
             + S["rush_td"] * col("rushing_tds") + S["rec_yd"] * col("receiving_yards")
             + S["rec_td"] * col("receiving_tds") + S["reception"] * col("receptions")
+            + S.get("special_teams_td", 0.0) * col("special_teams_tds")
             + S["fumble_lost"] * fl + S["two_pt"] * twopt)
 
 

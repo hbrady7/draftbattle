@@ -1,10 +1,10 @@
 {
- "built_at": "2026-09-30T15:01:50.286978+00:00",
+ "built_at": "2026-09-30T17:41:47.863855+00:00",
  "week": 4,
  "season": 2026,
  "n_players": 369,
  "scoring": {
-  "_note": "Full-PPR, skeleton default (ffb_pipeline.py game_line_points). pass_td=4. The \u00a711 scoring check compares FFA against 4 vs 6 pass-TD and flags mismatches. Change here and it propagates everywhere points are scored.",
+  "_note": "Full PPR \u2014 confirmed from Draft Battle's own scoring settings (2026-09-30): pass_td=4, 0.05/pass yd, -1 INT, 6/rush+rec TD, 0.1/rush+rec yd, +1/reception, -1 fumble lost, +6 kickoff/punt return TD (nflverse special_teams_tds). two_pt=2 kept (not shown in DB's settings but rare + negligible). Change here and it propagates everywhere points are scored.",
   "pass_yd": 0.05,
   "pass_td": 4,
   "interception": -1,
@@ -14,6 +14,7 @@
   "rec_td": 6,
   "reception": 1,
   "fumble_lost": -1,
+  "special_teams_td": 6,
   "two_pt": 2
  },
  "mean_recipe": "0.5*FFA + 0.5*ECR-implied (interim); fallback FFA -> ECR -> DB*0.85",

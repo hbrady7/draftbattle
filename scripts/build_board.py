@@ -57,6 +57,7 @@ def score_stats(r) -> float:
             + S["interception"] * _num(r.get("passing_interceptions")) + S["rush_yd"] * _num(r.get("rushing_yards"))
             + S["rush_td"] * _num(r.get("rushing_tds")) + S["rec_yd"] * _num(r.get("receiving_yards"))
             + S["rec_td"] * _num(r.get("receiving_tds")) + S["reception"] * _num(r.get("receptions"))
+            + S.get("special_teams_td", 0.0) * _num(r.get("special_teams_tds"))
             + S["fumble_lost"] * fl + S["two_pt"] * twopt)
 
 
