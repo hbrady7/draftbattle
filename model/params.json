@@ -165,5 +165,112 @@
   ],
   "min_pairs": 500,
   "shrink_k": 120
+ },
+ "stack": {
+  "weights_by_pos": {
+   "QB": {
+    "structural": 0.3239,
+    "gbm": 0.4653,
+    "ecr_implied": 0.2108,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   },
+   "RB": {
+    "structural": 0.2726,
+    "gbm": 0.4224,
+    "ecr_implied": 0.3051,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   },
+   "WR": {
+    "structural": 0.6874,
+    "gbm": 0.0782,
+    "ecr_implied": 0.2344,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   },
+   "TE": {
+    "structural": 0.4368,
+    "gbm": 0.3613,
+    "ecr_implied": 0.2018,
+    "trailing8": 0.0,
+    "trailing_xfp": 0.0
+   }
+  },
+  "models": [
+   "structural",
+   "gbm",
+   "ecr_implied",
+   "trailing8",
+   "trailing_xfp"
+  ],
+  "fit_window": "2021-2024 walk-forward",
+  "held_out": "2025",
+  "weeks_sampled": [
+   3,
+   7,
+   11,
+   15
+  ],
+  "shape_by_pos": {
+   "QB": "B",
+   "RB": "B",
+   "WR": "B",
+   "TE": "B"
+  },
+  "live_bridge": {
+   "until_logged_weeks": 6,
+   "ffa_takes": "ecr_implied weight, 50/50 with ecr",
+   "db_weight": 0
+  },
+  "held_out_verdict": {
+   "QB": {
+    "stack_crps": 4.298,
+    "ecr_crps": 4.667,
+    "stack_mae": 6.077,
+    "ecr_mae": 6.562,
+    "beats_ecr": true,
+    "best_single": "gbm",
+    "best_single_crps": 4.231,
+    "cov90_stack": 0.922
+   },
+   "RB": {
+    "stack_crps": 3.482,
+    "ecr_crps": 3.583,
+    "stack_mae": 5.059,
+    "ecr_mae": 5.201,
+    "beats_ecr": true,
+    "best_single": "gbm",
+    "best_single_crps": 3.479,
+    "cov90_stack": 0.921
+   },
+   "WR": {
+    "stack_crps": 3.487,
+    "ecr_crps": 3.776,
+    "stack_mae": 5.204,
+    "ecr_mae": 5.671,
+    "beats_ecr": true,
+    "best_single": "gbm",
+    "best_single_crps": 3.378,
+    "cov90_stack": 0.908
+   },
+   "TE": {
+    "stack_crps": 3.548,
+    "ecr_crps": 3.868,
+    "stack_mae": 5.048,
+    "ecr_mae": 5.385,
+    "beats_ecr": true,
+    "best_single": "structural",
+    "best_single_crps": 3.547,
+    "cov90_stack": 0.875
+   }
+  },
+  "player_cov90": {
+   "QB": 0.922,
+   "RB": 0.921,
+   "WR": 0.908,
+   "TE": 0.875
+  },
+  "metric": "CRPS (primary), MAE"
  }
 }

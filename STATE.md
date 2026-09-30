@@ -3,9 +3,9 @@
 _Current phase, what's done, what's next, dead ends already tried. Kept current every phase._
 
 ## Current phase
-**Phase 9 core done; then Phase 10.** Empirical correlations + DNP-mass closed (below). Remaining Phase-9 refinements: shape-A/B contest, SD challenger, full team-total coverage validation (D9.4). Next big phase: **Phase 10 — stack weights + held-out 2025 + freeze params.**
+**Phase 11 — wire in, track, finish (last phase).** Swap the live board mean to the frozen stacked model (FFA live-bridged), add `--score` + live scorecard + the §11 scoring check, and build the Opponents / Results / Model tabs + README.
 
-**BASELINE READY for Week 4 at localhost:5175.** (Live draft now has data-driven AI-opponent WPA — see AI-opponent work.)
+**BASELINE READY at localhost:5175. FULL MODEL VALIDATED: the stack beats the market (ECR) on held-out 2025 at every position (below).**
 
 ## Done
 - **Phase 0 — Audit and set up. ✅ committed `59bc525`.** Audited `draftTool` → REUSE sim (D0.3); scaffolded repo; dark 6-tab shell serves on `:5175`.
@@ -25,6 +25,9 @@ _Current phase, what's done, what's next, dead ends already tried. Kept current 
   - `scripts/features.py` (game env, shares, efficiency, opponent adj — walk-forward-safe), `model_structural.py` (6b–6e), `model_gbm.py` (HistGradientBoostingRegressor, LightGBM libomp unavailable). Integrated into backtest.
   - **Result (post-leak-fix, weeks [3,7,11,15], n=3116): structural CRPS 3.661, gbm 3.672 beat ecr_implied 3.881 overall AND at every position; cov90 0.895/0.889 vs 0.845.** Edge is marginal (~0.2) and comes from the core's leak-free re-use of ECR + trailing; **no ablated feature group ships** (vegas/weather/participation/efficiency/opponent — all 95% CIs include 0).
   - Adversarial leakage audit: clean except the §5 Thursday-kickoff ECR drop wasn't applied → FIXED; re-run confirms the result holds.
+- **Phase 8 — Availability. ✅ committed `49f77d3`.** Logistic P(plays) + snap multiplier + vacated redistribution → `availability.py`, `params.json['availability']`. Beats flat rule (Brier 0.128<0.137); OUT→0, DOUBTFUL→0.01 exact. Caveat: QUESTIONABLE optimistic (pred 0.83 vs 0.58 held-out) — refine.
+- **Phase 9 — Distribution & correlations. ✅ (core `fdb1dd8`; shape/coverage in this commit).** Empirical Gaussian-copula correlations fit on ~3,400+ pairs (QB-WR1 0.35, RB1-RB2 −0.01, opp QB-QB 0.17) → `params.json['correlations']`, wired into the sim + DNP mass. Shape A/B contest: **gamma (B) won every position**; player 90% coverage 0.88–0.92. Not done: SD challenger, team-total coverage (deferred, D9.x).
+- **Phase 10 — Stack & held-out test. ✅ (committing now).** Per-position NNLS stack (`stack.py`) fit walk-forward 2021–24, frozen in `params.json['stack']`, evaluated ONCE on held-out 2025. **Stack beats ECR on CRPS at EVERY position** (QB 4.30<4.67, RB 3.48<3.58, WR 3.49<3.78, TE 3.55<3.87); §10 bar cleared. Walk-forward audited clean. GBM alone marginally best at QB/RB/WR (stack chosen for robustness).
 
 - **Phase 8 — Availability model. ✅ complete (committing now).**
   - `scripts/availability.py`: P(plays) logistic (report/practice/injury-group/position/consec-missed), recency-weighted to the current regime, near-unregularized → reproduces empirical bucket rates. Hard rules: Out/IR→0, unlisted→0.99. Snap multiplier + vacated-opportunity redistribution (default 70/30). Frozen to `model/params.json`.

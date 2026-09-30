@@ -96,3 +96,29 @@ A group ships iff the 95% bootstrap CI of its CRPS improvement excludes 0.
 | participation | 3.816 | 3.79 | -0.026 | [-0.078, +0.025] | · |
 | efficiency | 3.816 | 3.787 | -0.03 | [-0.11, +0.035] | · |
 | opponent | 3.816 | 3.832 | +0.016 | [-0.023, +0.062] | · |
+
+## Phase 9–10: stacked model & held-out 2025 (the decisive test)
+
+Per-position NNLS stack weights fit **walk-forward on 2021–2024**, applied **once** to
+the held-out **2025** season (weeks 3,7,11,15). Distribution shape B (zero-floored
+gamma) won the A/B contest at every position. Walk-forward audited — no leakage
+(model inputs + isotonic ECR + stack weights all use only pre-target data).
+
+Stack weights: QB gbm .47/struct .32/ecr .21 · RB gbm .42/struct .27/ecr .31 ·
+WR struct .69/ecr .23/gbm .08 · TE struct .44/gbm .36/ecr .20 (trailing → 0).
+
+Held-out 2025 CRPS by position:
+
+| pos | stack CRPS | ECR CRPS | stack MAE | ECR MAE | beats ECR | cov90 | best single |
+|---|---|---|---|---|---|---|---|
+| QB | 4.298 | 4.667 | 6.077 | 6.562 | ✓ | 0.922 | gbm 4.231 |
+| RB | 3.482 | 3.583 | 5.059 | 5.201 | ✓ | 0.921 | gbm 3.479 |
+| WR | 3.487 | 3.776 | 5.204 | 5.671 | ✓ | 0.908 | gbm 3.378 |
+| TE | 3.548 | 3.868 |   —   |   —   | ✓ | 0.875 | structural 3.547 |
+
+**Verdict: the stacked model beats the market (ECR-implied) on CRPS at EVERY position
+on the untouched 2025 season** — the §10 bar is cleared. Honest notes: pure GBM was
+marginally best at QB/RB/WR (the stack trades a sliver of accuracy for robustness /
+not over-trusting one model); TE 90% coverage runs slightly narrow (0.875); the SD
+challenger and team-best-ball-total coverage validation were not run (deferred).
+Params frozen in `model/params.json['stack']`.
