@@ -138,7 +138,7 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
     const candLocal = recs.map(({ p }) => localOf.get(p.id)).filter((x) => x != null);
     if (!candLocal.length) return;
     let cancel = false; setRecLoading(true);
-    simApi.evaluate(rLocal, availableIdx, currentOverall, my0, candLocal, 12, aiSeatNames).then((res) => {
+    simApi.evaluate(rLocal, availableIdx, currentOverall, my0, candLocal, 18, aiSeatNames).then((res) => {
       if (cancel) return;
       const map = {};
       for (const r of res.results) { const pl = simApi.universe.players[r.localIdx]; if (pl) map[pl.id] = r.winPct; }
@@ -147,9 +147,14 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
     return () => { cancel = true; };
   }, [picks, simApi.ready, currentTeam, my0, aiSeatNames]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Rank candidates by win% when available (else by need-weighted projection), top 8.
+  // Rank candidates by win% (which already accounts for who falls: the sim completes
+  // the draft, so a stud who'll come back to you doesn't top the "take now" list —
+  // you'd get him anyway). `edge` = win% vs a typical available candidate here.
   const ranked = useMemo(() => {
     const arr = recs.map((r) => ({ ...r, winPct: recWin?.[r.p.id] }));
+    const defined = arr.map((r) => r.winPct).filter((v) => v != null).sort((a, b) => a - b);
+    const med = defined.length ? defined[Math.floor(defined.length / 2)] : null;
+    for (const r of arr) r.edge = (r.winPct != null && med != null) ? r.winPct - med : null;
     if (recWin) arr.sort((a, b) => (b.winPct ?? -1) - (a.winPct ?? -1));
     return arr.slice(0, 8);
   }, [recs, recWin]);
@@ -196,9 +201,9 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
     <div className="draftroom">
       <div className="dr-header">
         <div className="seat-pick">
-          <label>My seat
+          <label className="seat-select">🎯 Your draft seat
             <select value={mySeat} onChange={(e) => { setMySeat(+e.target.value); }}>
-              {Array.from({ length: N_TEAMS }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+              {Array.from({ length: N_TEAMS }, (_, i) => <option key={i} value={i + 1}>Seat {i + 1}{i + 1 === mySeat ? " (you)" : ""}</option>)}
             </select>
           </label>
           <div className="onclock">
@@ -293,12 +298,13 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
         <div className="dr-side">
           <div className="recs">
             <h3>
-              {currentTeam === my0 ? "Pick now — win% by player" : "Your next pick (projection)"}
+              {currentTeam === my0 ? "Pick now — win% + value (who'll fall)" : "Your next pick (projection)"}
               {recLoading && <span className="muted small"> · simulating…</span>}
             </h3>
-            {ranked.map(({ p, pSurv, winPct }) => {
-              const delta = (winPct != null && recBase != null) ? winPct - recBase : null;
+            {ranked.map(({ p, pSurv, winPct, edge }) => {
               const ci = p.ci90 || [p.p05, p.p95];
+              const wait = pSurv != null && pSurv >= 0.5;    // likely back to you → don't burn a pick on him
+              const urgent = pSurv != null && pSurv < 0.25;  // won't last → take now
               return (
                 <div key={p.id} className={"rec2" + (currentTeam === my0 ? " pickable" : "")}
                      onClick={() => currentTeam === my0 && draft(p.id)}>
@@ -307,26 +313,39 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
                     <div className="rec-top">
                       <span className="rec-name">{p.name}</span>
                       {currentTeam === my0 && (
-                        <span className="rec-win">
+                        <span className="rec-win" title="win% if you draft him now (rest of draft completed by the model)">
                           {winPct != null ? `${winPct.toFixed(1)}%` : (recLoading ? "…" : "—")}
-                          {delta != null && <em className={delta >= 0 ? "pos" : "neg"}> {delta >= 0 ? "+" : ""}{delta.toFixed(1)}</em>}
+                          {edge != null && <em className={edge >= 0 ? "pos" : "neg"}> {edge >= 0 ? "+" : ""}{edge.toFixed(1)}</em>}
                         </span>
                       )}
                     </div>
                     <div className="rec-sub">
-                      {p.team}{p.opp ? ` vs ${p.opp}` : ""}{p.implied_total != null ? ` · ${p.implied_total.toFixed(0)} implied` : ""}
+                      {p.team}{p.opp ? ` vs ${p.opp}` : ""}{p.implied_total != null ? ` · ${p.implied_total.toFixed(0)} impl` : ""}
                     </div>
                     <div className="rec-sub2">
                       <span>{p.mean?.toFixed(1)} pts</span>
                       {ci?.[0] != null && <span>CI {ci[0].toFixed(0)}–{ci[1].toFixed(0)}</span>}
                       <span title="P(available at your next pick)">avail {(pSurv * 100).toFixed(0)}%</span>
+                      {currentTeam === my0 && (wait
+                        ? <span className="tag-wait" title="likely back to you next pick — grab someone scarcer now, take him later">⏳ wait</span>
+                        : urgent ? <span className="tag-now" title="unlikely to last — take him now">🔒 now</span> : null)}
                     </div>
                   </div>
                 </div>
               );
             })}
-            {currentTeam === my0 && recBase != null &&
-              <div className="rec-base muted small">Δ vs auto-pick baseline ({recBase.toFixed(1)}%) · contest baseline 12.5%</div>}
+            {currentTeam === my0 && (() => {
+              const w = ranked.filter((r) => r.winPct != null);
+              if (!w.length) return null;
+              const takeNow = w.filter((r) => r.pSurv < 0.5).sort((a, b) => b.winPct - a.winPct)[0] || w[0];
+              const waits = w.filter((r) => r.pSurv >= 0.6).map((r) => r.p.name);
+              return (
+                <div className="rec-base small">
+                  <b>Best value now:</b> {takeNow.p.name} ({takeNow.winPct.toFixed(1)}%)
+                  {waits.length ? <> · <span className="muted">can wait (likely back to you): {waits.slice(0, 3).join(", ")}</span></> : null}
+                </div>
+              );
+            })()}
           </div>
           <div className="sideboard">
             <div className="pickentry-head">
