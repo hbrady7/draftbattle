@@ -5,7 +5,7 @@ _Current phase, what's done, what's next, dead ends already tried. Kept current 
 ## Current phase
 **BUILD COMPLETE — all 12 phases (0–11) done.** Dashboard live at localhost:5175.
 
-**FULL MODEL VALIDATED: the stacked model beats the market (ECR) on held-out 2025 at every position.** One honest gap (D11.x): the live board MEAN still uses the Phase-2 interim blend, because projecting the *upcoming* (unplayed) week with structural+GBM needs a live-week feature builder — the ECR archive + features only cover completed weeks. The full model is validated on the backtest/held-out and shown in the Model tab; wiring it to the live upcoming week is the one remaining integration.
+**FULL MODEL VALIDATED (beats ECR on held-out 2025 every position) AND now LIVE.** The D11 gap is closed: `scripts/project_week.py` builds W4 features (trailing through W3 + W4 Vegas/ECR, matching features.py), runs the structural + GBM + isotonic-ECR models, blends per the frozen stack weights (FFA live-bridged), and rewrites board.json's mean — behind a hard sanity gate with per-player interim fallback. **Shipped the full model: 0/369 fallbacks, means sane (Gibbs 24.3, Allen 26.0, JSN 21.1), pos-maxes realistic.** meta.mean_recipe = "full stack". The board/Draft Room/win% now project off the validated model, not the interim blend.
 
 ## Done
 - **Phase 0 — Audit and set up. ✅ committed `59bc525`.** Audited `draftTool` → REUSE sim (D0.3); scaffolded repo; dark 6-tab shell serves on `:5175`.

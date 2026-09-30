@@ -17,7 +17,7 @@
   "special_teams_td": 6,
   "two_pt": 2
  },
- "mean_recipe": "0.5*FFA + 0.5*ECR-implied (interim); fallback FFA -> ECR -> DB*0.85",
+ "mean_recipe": "full stack (structural+gbm+ecr, live-bridged FFA) \u2014 \u00a76g",
  "phase": "2 baseline",
  "db_only": 68,
  "backup_qb": 3,
