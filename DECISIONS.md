@@ -41,3 +41,11 @@ _Every default taken from BRIEF.md, and every call the brief doesn't cover. One 
 - **D3.3 — Vectorized best-ball** (numpy) validated identical to an exact greedy port of `bestBallTeamScores` (max diff 4.6e-5 = float32 summation-order rounding). Used for the 100k Python sim (~0.8–1.1s). Optimal-lineup identity: mandatory QB/2RB/3WR/TE then FLEX+SF = top-2 leftovers with FLEX restricted to non-QB (`extra = M1 + (M2 if M1 flex-eligible else best-eligible)`).
 - **D3.4 — Parity + timing PASS.** JS 20k-draw win% 13.33 vs Python 100k 13.08 → **0.25pt** (<1pt). **Per-pick full 8×11 evaluation 71ms** (<300ms). The 393ms sample-matrix build is the once-per-session cost (§12 step 1), not the per-pick target.
 - **D3.5 — simConfig reconciled to §12:** `N_SIM_DEFAULT` 40k→**20k** (session matrix draws), `N_SIM_RESULTS` 500k→**40k** (in-browser post-draft; Python report uses 100k). Live `EVALUATE` fill/candidate budget (`N_DRAFT_SAMPLES`) is tuned against latency in Phase 5.
+
+## Phase 4
+
+- **D4.1 — Fixed-scale standardization, not per-pool z-score.** Z-scoring `-db_rank` over the ~220-pool collapses adjacent ranks to ~0.016 SD, so a temp-0.8 softmax is near-uniform over the top (bug: Gibbs ADP 30, corr 0.735). Standardizing by fixed scales (`-db_rank/8`, `mean/8`) gives an effective reach of ~temp×8 ≈ 6 ranks. **Result: Spearman(ADP, DB rank) = 0.998**, Gibbs (rank 1) ADP 5.3 — high with realistic draft noise.
+- **D4.2 — REQUIRED[QB]=2 (superflex).** Teams target 2 QBs (QB + SF); `HARD_CAP[QB]=2` makes a 3rd QB ineligible (−∞), matching "e.g. a 3rd QB" in §13. RB/WR/TE have no hard cap (extras help via FLEX/SF/best-ball).
+- **D4.3 — 8 profiles in `opponents.json` (one per seat).** §13/§14 describe 7 AI + 7 cards; I store all 8 seats and the app simply treats the 7 that aren't my seat as opponents (my seat's profile is ignored — I draft by max win%). Default weights `{db_rank 1.0, our_mean 0, positional_need 0.6, position_run 0, qb_early 0}`, temperature 0.8.
+- **D4.4 — `src/opponents/pickModel.js` mirrors `opponents.py`** (same scales/features/softmax) for the browser live-draft fills; wired into `draftSim.completeDraft` in Phase 5.
+- **D4.5 — Learning** (`opponents.py --fit`) no-ops below 5 drafts in `results/`; logistic weight fit wired in Phase 11/13.

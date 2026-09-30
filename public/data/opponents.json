@@ -1,0 +1,108 @@
+{
+ "profiles": [
+  {
+   "name": "AI-1",
+   "seat": 1,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  },
+  {
+   "name": "AI-2",
+   "seat": 2,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  },
+  {
+   "name": "AI-3",
+   "seat": 3,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  },
+  {
+   "name": "AI-4",
+   "seat": 4,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  },
+  {
+   "name": "AI-5",
+   "seat": 5,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  },
+  {
+   "name": "AI-6",
+   "seat": 6,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  },
+  {
+   "name": "AI-7",
+   "seat": 7,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  },
+  {
+   "name": "AI-8",
+   "seat": 8,
+   "weights": {
+    "db_rank": 1.0,
+    "our_mean": 0.0,
+    "positional_need": 0.6,
+    "position_run": 0.0,
+    "qb_early": 0.0
+   },
+   "temperature": 0.8,
+   "notes": ""
+  }
+ ]
+}
