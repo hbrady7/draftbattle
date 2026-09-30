@@ -3,20 +3,20 @@
 _Current phase, what's done, what's next, dead ends already tried. Kept current every phase._
 
 ## Current phase
-**Phase 0 — Audit and set up.** Local work complete; finishing with the serve check + commit.
+**Phase 2 — Baseline model.** Starting. Build the interim board (mean = 50% FFA + 50% ECR-implied, fallback FFA), SD from `player_sd.py`, shape-A PDF, simple P(plays) rule.
 
 ## Done
-- Located all §3a input files (in `~/Downloads` and `~/Downloads/draftTool`).
-- Audited the existing app `~/Downloads/draftTool` (React 19 + Vite sim stack). Decision: **REUSE** its sim math (see DECISIONS D0.3). Copied `simCore.js`, `projDist.js`, `bbDraftLogic.js`, `mcWorker.js`, `draftSim.js`, `simConfig.js` into `src/sim` + `src/config` verbatim.
-- Scaffolded repo at `~/draftbattle.js` per §15: dirs, `BRIEF.md`, `STATE.md`, `DECISIONS.md`, `model/scoring.json`, input files in `input_data/week4`, box scores cached in `data/raw/stats_player`.
-- Built the Vite + React shell (6-tab dark dashboard) that serves on `:5175` (strictPort).
-- `git init`, SSH remote set to `git@github.com:hbrady7/draftbattle.js.git`, branch `main`, local identity `hbrady7 / hollisbrady2004@gmail.com`.
+- **Phase 0 — Audit and set up. ✅ committed `59bc525` (local).** Audited `draftTool` → REUSE sim (D0.3); scaffolded repo; dark 6-tab shell serves on `:5175`; `npm run build` passes.
+- **Phase 1 — Data layer. ✅ complete (local commit pending in this phase's commit).**
+  - `scripts/data_sources.py`: every §5 source, 12h current-season cache, leakage-guard helpers, core-source stop policy. **68/68 source-seasons downloaded clean.**
+  - `scripts/ids.py`: `name_key` exact replica, gsis crosswalk (`players.csv` ∪ `db_playerids.csv`), aliases, `resolve()`.
+  - **Checks passed:** row counts printed for all sources; **DB top-200 gsis match = 100%** (≥95% target), FFA-name 97.5%; `build/unmatched.txt` written (0 rows); Sleeper API live.
 
 ## Next
-- Phase 1 — Data layer (`scripts/data_sources.py`, `scripts/ids.py`): every §5 source, cache, leakage guards, crosswalk, Sleeper test. Target ≥95% ID match on DB top-200.
+- Phase 2 build (`scripts/build_board.py` + `scripts/distribution.py`): interim mean, `player_sd` SD, shape-A PDF via `match_mean_sd`, P(plays) = Q .85 / D .25 / O 0. **Check:** print full rows for Gibbs, Allen, Bryce Young, JSN, Kittle, Skattebo, Jack Strand, a backup QB; simulated SD within 0.1 of target for 20 random players.
 
 ## Blockers / open
-- **GitHub remote not yet created.** No `gh` CLI, no token, no browser creds on this machine — only SSH works, which can push/clone but not *create* a repo. The `hbrady7/draftbattle.js` repo does not exist yet, so the first `push` will fail with "repository not found." Local commits proceed each phase; they get pushed once the remote exists (user to create it private, or provide a PAT / install `gh`). See DECISIONS D0.6.
+- **GitHub remote still not created — push is blocked.** `git push` returns the exact error `ERROR: Repository not found` (SSH auth to `hbrady7` is confirmed working; the repo simply doesn't exist). Local commits continue each phase; all get pushed once `hbrady7/draftbattle.js` (private) exists — user to create it, or provide a PAT / install `gh`. See DECISIONS D0.7.
 
 ## Dead ends tried
-- `gh` CLI: not installed. `brew`: not installed. No `~/.git-credentials`, no credential helper, no keychain github item, no `*TOKEN*` env var. SSH auth to `hbrady7` verified working.
+- `gh` CLI, `brew`, `~/.git-credentials`, credential helper, keychain github item, `*TOKEN*` env var — all absent. SSH auth to `hbrady7` verified working (push fails only because the repo doesn't exist yet).
