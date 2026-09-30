@@ -1,19 +1,27 @@
-import { useState } from 'react'
+import { useState } from "react";
+import { useData } from "./lib/useData.js";
+import BoardTab from "./tabs/BoardTab.jsx";
+import DraftRoomTab from "./tabs/DraftRoomTab.jsx";
+import DataTab from "./tabs/DataTab.jsx";
 
-// Six tabs from BRIEF §14. Phase 0 ships the shell that serves on :5175;
-// Board / Draft Room / Data get built in Phase 5, the rest in Phase 11.
 const TABS = [
-  { id: 'board', label: 'Board', note: 'Player table with our mean, 90% CI range bar, edge vs DB, flags. Row drawer opens the PDF + component breakdown.' },
-  { id: 'draft', label: 'Draft Room', note: '8×11 snake grid, my seat highlighted. Live win % (expected fill + floor), pick recommendations, opponent next-pick strips.' },
-  { id: 'opponents', label: 'Opponents', note: 'Seven editable AI profiles (weights, temperature, notes). Test replays a saved draft for pick hit-rate.' },
-  { id: 'results', label: 'Results', note: 'After scoring: each of my players vs his 90% CI, contest coverage, portfolio report.' },
-  { id: 'model', label: 'Model', note: 'Backtest + live scorecard, PIT histogram, 90% coverage by position, stack weights, ablation table.' },
-  { id: 'data', label: 'Data', note: 'Week selector, CSV drop preview, build status from meta.json, unmatched names, scoring-check result, cache ages.' },
-]
+  { id: "board", label: "Board" },
+  { id: "draft", label: "Draft Room" },
+  { id: "opponents", label: "Opponents" },
+  { id: "results", label: "Results" },
+  { id: "model", label: "Model" },
+  { id: "data", label: "Data" },
+];
+
+const PLACEHOLDER = {
+  opponents: "Seven editable AI profiles (weights, temperature, notes) + Test replay. Profiles are built and drive the live draft now; the editor UI lands in Phase 11.",
+  results: "After scoring a played week (python make_week.py --score): each of my players vs his 90% CI, contest coverage, portfolio report. Phase 11.",
+  model: "Backtest + live scorecard, PIT histogram, 90% coverage by position, stack weights, ablation table. Phases 6–11.",
+};
 
 export default function App() {
-  const [tab, setTab] = useState('board')
-  const active = TABS.find((t) => t.id === tab)
+  const [tab, setTab] = useState("board");
+  const data = useData();
 
   return (
     <div className="app">
@@ -22,29 +30,36 @@ export default function App() {
           <span className="brand-mark">◆</span> Draft Battle
           <span className="brand-sub">best-ball projection model · localhost:5175</span>
         </div>
-        <div className="build-status">Phase 0 · baseline shell</div>
+        <div className="build-status">
+          {data.meta ? `Week ${data.meta.week} · ${data.meta.n_players} players` : "Phase 5 · baseline"}
+        </div>
       </header>
 
       <nav className="tabs">
         {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={'tab' + (t.id === tab ? ' tab-active' : '')}
-            onClick={() => setTab(t.id)}
-          >
+          <button key={t.id} className={"tab" + (t.id === tab ? " tab-active" : "")} onClick={() => setTab(t.id)}>
             {t.label}
           </button>
         ))}
       </nav>
 
-      <main className="panel">
-        <h1 className="panel-title">{active.label}</h1>
-        <p className="panel-note">{active.note}</p>
-        <div className="placeholder">
-          <span className="placeholder-badge">under construction</span>
-          <p>This tab wires up in a later phase. The app serves and the shell is live.</p>
-        </div>
+      <main className={tab === "draft" ? "panel-wide" : "panel"}>
+        {data.loading && <div className="placeholder">Loading build data…</div>}
+        {data.error && <div className="placeholder error">Failed to load /data/*.json — run <code>npm run week -- --week 4</code> first.<br />{data.error}</div>}
+        {!data.loading && !data.error && (
+          <>
+            {tab === "board" && <BoardTab board={data.board} />}
+            {tab === "draft" && <DraftRoomTab board={data.board} sim={data.sim} opponents={data.opponents} />}
+            {tab === "data" && <DataTab meta={data.meta} />}
+            {PLACEHOLDER[tab] && (
+              <div className="panel">
+                <h1 className="panel-title">{TABS.find((t) => t.id === tab).label}</h1>
+                <div className="placeholder"><span className="placeholder-badge">later phase</span><p>{PLACEHOLDER[tab]}</p></div>
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
-  )
+  );
 }

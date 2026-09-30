@@ -1,7 +1,13 @@
 /**
  * Bot logic used inside the Monte Carlo: how the other seven managers (and
  * my own later picks) finish out their rosters.
+ *
+ * Opponent picks now sample the §13 opponent model (src/opponents/pickModel.js)
+ * when `opts.profiles` is supplied; otherwise they fall back to the legacy
+ * botSamplePick heuristic (kept for compatibility).
  */
+
+import { samplePick, defaultProfiles } from "../opponents/pickModel.js";
 
 export const N_TEAMS = 8;
 export const N_ROUNDS = 11;
@@ -43,8 +49,8 @@ export function botPickScore(p, posCounts) {
  * score = (points_vor + alpha × p10_vor) × need
  */
 export function userPickScore(p, posCounts, round = 0) {
-  const vor    = p.points_vor ?? 0;
-  const p10vor = p.p10_vor ?? p.ceiling_vor ?? vor;
+  const vor    = p.points_vor ?? p.points ?? p.mean ?? 0;
+  const p10vor = p.p10_vor ?? p.ceiling_vor ?? p.p95 ?? vor;
   const need   = botNeedMul(posCounts, p.position);
   const alpha  = Math.min(1, Math.max(0, round / (N_ROUNDS - 1)));
   return (vor + alpha * p10vor) * need;
@@ -115,8 +121,17 @@ function botSamplePick(pool, posCounts) {
 
 /**
  * Finish every remaining pick of the snake. Returns 8 arrays of player .idx.
+ *
+ * opts.profiles : per-seat §13 opponent profiles (from opponents.json). When
+ *                 present, opponents sample via pickModel.samplePick.
+ * opts.rng      : () => [0,1) PRNG for reproducible fills (default Math.random).
+ * Each roster row is expected to carry a `player` with `idx`, `position`,
+ * `db_rank`, and `points`/`mean`.
  */
-export function completeDraft(myRoster, otherRosters, available, pickIndex, myTeamIdx) {
+export function completeDraft(myRoster, otherRosters, available, pickIndex, myTeamIdx, opts = {}) {
+  const profiles = opts.profiles ?? null;
+  const rng = opts.rng ?? Math.random;
+
   const rosterIdxs = Array.from({ length: N_TEAMS }, () => []);
   const allCurrent = Array.from({ length: N_TEAMS }, (_, t) => {
     if (t === myTeamIdx) return myRoster;
@@ -135,6 +150,7 @@ export function completeDraft(myRoster, otherRosters, available, pickIndex, myTe
     for (const row of r) if (row.player) c[row.player.position] = (c[row.player.position] || 0) + 1;
     return c;
   });
+  const recent = allCurrent.map((r) => r.filter((row) => row.player).map((row) => row.player.position));
 
   const pool = [...available];
   const totalPicks = N_TEAMS * N_ROUNDS;
@@ -145,21 +161,27 @@ export function completeDraft(myRoster, otherRosters, available, pickIndex, myTe
     let best = null;
     let bestAt = -1;
     if (team === myTeamIdx) {
-      // User's future picks: deterministic — always take highest userPickScore.
+      // My future picks: greedy by expected points, weighted by roster need.
       const round = Math.floor(pi / N_TEAMS);
       let bestScore = -Infinity;
       for (let k = 0; k < pool.length; k++) {
         const s = userPickScore(pool[k], posCounts[team], round);
         if (s > bestScore) { bestScore = s; best = pool[k]; bestAt = k; }
       }
+    } else if (profiles) {
+      // Opponent picks: §13 softmax model.
+      const profile = profiles[team] ?? { weights: undefined, temperature: 0.8 };
+      const k = samplePick(pool, posCounts[team], recent[team], profile, rng);
+      best = pool[k]; bestAt = k;
     } else {
-      // Bot picks: probabilistic — weighted sample from top-K by botPickScore.
+      // Legacy fallback: temperature-window heuristic.
       const chosen = botSamplePick(pool, posCounts[team]);
       if (chosen) { best = chosen.p; bestAt = chosen.k; }
     }
     if (!best) { pi++; continue; }
     rosterIdxs[team].push(best.idx);
     posCounts[team][best.position] = (posCounts[team][best.position] || 0) + 1;
+    recent[team].push(best.position);
     slotsLeft[team]--;
     pool.splice(bestAt, 1);
     pi++;
