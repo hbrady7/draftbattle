@@ -145,6 +145,12 @@ body {
 .rec-surv { color: var(--muted); width: 34px; text-align: right; }
 .sideboard input { width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 4px; padding: 6px 8px; margin-bottom: 6px; }
 .side-list { max-height: 360px; overflow-y: auto; }
+.sideboard { order: -1; }  /* pick-entry is the primary control — show it first */
+.pickentry-head { font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.pickentry-head b { color: var(--text); }
+.pickentry-head b.me { color: var(--accent); }
+.likely3 { margin-top: 2px; }
+.likely3-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 2px 0 4px; }
 
 /* rich recommendation cards (§12 per-candidate win%) */
 .rec2 { display: flex; gap: 8px; align-items: flex-start; padding: 6px; border-radius: 5px; border-bottom: 1px solid var(--border); }

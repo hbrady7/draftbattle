@@ -68,6 +68,13 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
 
   const aiEnabled = !!(aiData && aiData.ais && aiData.ais.length);
   const aiMap = useMemo(() => aiByName(aiData), [aiData]);
+  // Only offer the well-sampled AIs (drops Faleolo/Crookshank — too few rooms).
+  const usableAis = useMemo(() => {
+    if (!aiData?.ais) return [];
+    const seven = aiData.meta?.default_seven;
+    return seven ? aiData.ais.filter((a) => seven.includes(a.name))
+                 : aiData.ais.filter((a) => (a.rooms_faced ?? 0) >= 15);
+  }, [aiData]);
   const byId = useMemo(() => new Map(board.map((p) => [p.id, p])), [board]);
   const draftedIds = useMemo(() => new Set(picks.map((p) => p.id)), [picks]);
   const my0 = mySeat - 1;
@@ -147,6 +154,23 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
     return arr.slice(0, 8);
   }, [recs, recWin]);
 
+  // The 3 most likely players for whoever is on the clock, per the model:
+  // opponent seat → their assigned AI's prediction; my seat → my top recommendations.
+  const likelyThree = useMemo(() => {
+    if (currentTeam == null) return [];
+    if (currentTeam === my0) return ranked.slice(0, 3).map((r) => ({ p: r.p, pct: r.winPct, kind: "win" }));
+    const round = Math.floor(currentOverall / N_TEAMS) + 1;
+    let pr = null;
+    if (aiEnabled && aiSeats[currentTeam] && aiMap[aiSeats[currentTeam]]) {
+      pr = aiPickProbs(available, aiMap[aiSeats[currentTeam]], round, { adp: aiData.adp });
+    } else if (opponents) {
+      const counts = {}; for (const p of rostersByTeam[currentTeam]) counts[p.position] = (counts[p.position] || 0) + 1;
+      pr = pickProbabilities(available, counts, [], opponents.profiles[currentTeam]);
+    }
+    if (!pr) return [];
+    return available.map((p, i) => ({ p, pct: pr[i] * 100, kind: "prob" })).sort((a, b) => b.pct - a.pct).slice(0, 3);
+  }, [currentTeam, my0, ranked, currentOverall, aiEnabled, aiSeats, aiMap, available, aiData, opponents, rostersByTeam]);
+
   const draft = (id) => setPicks([...picks, { overall: picks.length, team: teamForPick(picks.length), id }]);
   const undo = () => setPicks(picks.slice(0, -1));
   const reset = () => setPicks([]);
@@ -214,7 +238,7 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
               <span className="ai-seat-n">T{t + 1}</span>
               <select value={aiSeats[t] ?? ""}
                 onChange={(e) => { const v = e.target.value; setAiSeats((prev) => { const n = [...prev]; n[t] = v || null; return n; }); }}>
-                {aiData.ais.map((a) => <option key={a.name} value={a.name}>{a.name}{a.archetype ? ` — ${a.archetype}` : ""}</option>)}
+                {usableAis.map((a) => <option key={a.name} value={a.name}>{a.name}</option>)}
               </select>
             </label>
           ) : null))}
@@ -305,17 +329,41 @@ export default function DraftRoomTab({ board, sim, opponents, aiData }) {
               <div className="rec-base muted small">Δ vs auto-pick baseline ({recBase.toFixed(1)}%) · contest baseline 12.5%</div>}
           </div>
           <div className="sideboard">
-            <input placeholder="search to draft…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <div className="side-list">
-              {searched.map((p) => (
-                <div key={p.id} className="side-row" onClick={() => draft(p.id)}>
-                  <span className="rec-pos" style={{ color: posColor(p.position) }}>{p.position}</span>
-                  <span className="side-name">{p.name}</span>
-                  <span className="muted">{p.team}</span>
-                  <span className="side-mean">{p.mean?.toFixed(1)}</span>
-                </div>
-              ))}
+            <div className="pickentry-head">
+              {currentTeam == null ? "Draft complete"
+                : <>On the clock: <b className={currentTeam === my0 ? "me" : ""}>
+                    {currentTeam === my0 ? "YOU" : (aiEnabled && aiSeats[currentTeam] ? aiSeats[currentTeam] : `Team ${currentTeam + 1}`)}
+                  </b> · enter the pick</>}
             </div>
+            <input autoFocus placeholder={currentTeam === my0 ? "search your pick…" : "type a name, or pick a suggestion…"}
+              value={search} onChange={(e) => setSearch(e.target.value)} />
+            {!search.trim() ? (
+              <div className="likely3">
+                {likelyThree.length > 0 && (
+                  <div className="likely3-label">most likely {currentTeam === my0 ? "for you" : "pick"}</div>)}
+                {likelyThree.map(({ p, pct, kind }) => (
+                  <div key={p.id} className="side-row" onClick={() => draft(p.id)}>
+                    <span className="rec-pos" style={{ color: posColor(p.position) }}>{p.position}</span>
+                    <span className="side-name">{p.name}</span>
+                    <span className="muted">{p.team}</span>
+                    <span className="side-mean" title={kind === "win" ? "win% if you draft him" : "P(this AI takes him)"}>
+                      {pct != null ? `${pct.toFixed(0)}%` : (p.mean?.toFixed(1) ?? "")}</span>
+                  </div>
+                ))}
+                {likelyThree.length === 0 && currentTeam != null && <div className="muted small">start typing to search a player…</div>}
+              </div>
+            ) : (
+              <div className="side-list">
+                {searched.map((p) => (
+                  <div key={p.id} className="side-row" onClick={() => draft(p.id)}>
+                    <span className="rec-pos" style={{ color: posColor(p.position) }}>{p.position}</span>
+                    <span className="side-name">{p.name}</span>
+                    <span className="muted">{p.team}</span>
+                    <span className="side-mean">{p.mean?.toFixed(1)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
