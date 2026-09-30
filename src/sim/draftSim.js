@@ -8,6 +8,7 @@
  */
 
 import { samplePick, defaultProfiles } from "../opponents/pickModel.js";
+import { samplePick as aiSamplePick } from "../opponents/aiModel.js";
 
 export const N_TEAMS = 8;
 export const N_ROUNDS = 11;
@@ -130,6 +131,9 @@ function botSamplePick(pool, posCounts) {
  */
 export function completeDraft(myRoster, otherRosters, available, pickIndex, myTeamIdx, opts = {}) {
   const profiles = opts.profiles ?? null;
+  const aiBySeat = opts.aiBySeat ?? null;   // array[8] of data-driven AI models (null = my seat)
+  const adp = opts.adp ?? null;             // global name_key -> ADP baseline
+  const aiTemp = opts.aiTemp ?? 0.8;
   const rng = opts.rng ?? Math.random;
 
   const rosterIdxs = Array.from({ length: N_TEAMS }, () => []);
@@ -168,8 +172,13 @@ export function completeDraft(myRoster, otherRosters, available, pickIndex, myTe
         const s = userPickScore(pool[k], posCounts[team], round);
         if (s > bestScore) { bestScore = s; best = pool[k]; bestAt = k; }
       }
+    } else if (aiBySeat && aiBySeat[team]) {
+      // Opponent picks: data-driven AI model (real 25-room behavior).
+      const round = Math.floor(pi / N_TEAMS) + 1; // 1-based
+      const k = aiSamplePick(pool, aiBySeat[team], round, rng, { adp, temperature: aiTemp });
+      best = pool[k]; bestAt = k;
     } else if (profiles) {
-      // Opponent picks: §13 softmax model.
+      // Opponent picks: §13 synthetic softmax model (fallback when no AI data).
       const profile = profiles[team] ?? { weights: undefined, temperature: 0.8 };
       const k = samplePick(pool, posCounts[team], recent[team], profile, rng);
       best = pool[k]; bestAt = k;

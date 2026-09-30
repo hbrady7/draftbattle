@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
  * rank) with a dense local index space. Returns helpers to score rosters (floor)
  * and estimate the expected-fill win%.
  */
-export function useSim(board, sim, opponents, { universeSize = 200, nSim = 12000 } = {}) {
+export function useSim(board, sim, opponents, aiData, { universeSize = 200, nSim = 12000 } = {}) {
   const [ready, setReady] = useState(false);
   const workerRef = useRef(null);
   const waiters = useRef(new Map());
@@ -18,7 +18,7 @@ export function useSim(board, sim, opponents, { universeSize = 200, nSim = 12000
     const localOf = new Map(pool.map((p, i) => [p.id, i]));
     const globalToLocal = new Map(pool.map((p, i) => [p.idx, i]));
     const players = pool.map((p, i) => ({
-      idx: i, id: p.id, name: p.name, position: p.position, team: p.team,
+      idx: i, id: p.id, name: p.name, nk: p.nk, position: p.position, team: p.team,
       db_rank: p.db_rank, points: p.mean, sd_pts: p.sd, min: p.min, max: p.max, knots: p.knots,
     }));
     const correlations = sim.correlations
@@ -39,10 +39,10 @@ export function useSim(board, sim, opponents, { universeSize = 200, nSim = 12000
     };
     w.postMessage({
       type: "INIT", players: universe.players, correlations: universe.correlations,
-      profiles: opponents.profiles, seed: sim.meta?.seed ?? 12345, nSim,
+      profiles: opponents.profiles, aiData: aiData ?? null, seed: sim.meta?.seed ?? 12345, nSim,
     });
     return () => { w.terminate(); setReady(false); };
-  }, [universe, opponents, sim, nSim]);
+  }, [universe, opponents, sim, nSim, aiData]);
 
   const call = (msg) => new Promise((resolve) => {
     const id = ++chunk.current;
@@ -55,11 +55,11 @@ export function useSim(board, sim, opponents, { universeSize = 200, nSim = 12000
     universe,
     /** rostersByTeam: array[8] of LOCAL idx arrays. */
     score: (rostersByTeam, myTeam) => call({ type: "SCORE", rostersByTeam, myTeam }),
-    /** rostersByTeam + availableIdx: LOCAL idx arrays. */
-    fill: (rostersByTeam, availableIdx, pickIndex, myTeam, fills = 30) =>
-      call({ type: "FILL", rostersByTeam, availableIdx, pickIndex, myTeam, fills }),
+    /** rostersByTeam + availableIdx: LOCAL idx arrays. aiSeatNames: array[8] AI names (null = my seat). */
+    fill: (rostersByTeam, availableIdx, pickIndex, myTeam, fills = 30, aiSeatNames = null) =>
+      call({ type: "FILL", rostersByTeam, availableIdx, pickIndex, myTeam, fills, aiSeatNames }),
     /** §12 per-candidate win%: resolves { baseline, results:[{localIdx, winPct}] }. */
-    evaluate: (rostersByTeam, availableIdx, pickIndex, myTeam, candidateLocalIdxs, fills = 12) =>
-      call({ type: "EVALUATE", rostersByTeam, availableIdx, pickIndex, myTeam, candidateLocalIdxs, fills }),
+    evaluate: (rostersByTeam, availableIdx, pickIndex, myTeam, candidateLocalIdxs, fills = 12, aiSeatNames = null) =>
+      call({ type: "EVALUATE", rostersByTeam, availableIdx, pickIndex, myTeam, candidateLocalIdxs, fills, aiSeatNames }),
   };
 }

@@ -29,8 +29,8 @@ _Current phase, what's done, what's next, dead ends already tried. Kept current 
 ## Next
 - Phase 8: logistic availability model + vacated-opportunity redistribution → replaces the Phase-2 P(plays) rule; feeds the distribution's DNP mass.
 
-## Side track (done, in flight)
-- **Data-driven AI opponents** from the user's Week-4 workbook (25 rooms / 2200 picks): `scripts/ingest_ai_data.py` → `public/data/ai_opponents.json` (9 AIs, per-round position + player-share priors + ADP). Live-draft JS wiring (per-seat AI assignment, real who-falls-to-you + per-candidate WPA) built by a fork — pending verify + commit.
+## Side track — DONE ✅ (committed)
+- **Data-driven AI opponents** from the user's Week-4 workbook (25 rooms / 2200 picks): `scripts/ingest_ai_data.py` → `public/data/ai_opponents.json` (9 AIs, per-round position + player-share priors + ADP). Live-draft JS: `src/opponents/aiModel.js` + per-seat AI assignment in the Draft Room; `P(available)` + per-candidate **WPA** now use the real AIs. Checks: build clean, archetype-match 7/7, name join 61%, win% finite+separated. Caveat: expected-fill baseline optimistic (~80%, rigid bots + greedy self-fill) — Δ/floor are the grounded signals (DECISIONS D-AI.4).
 
 ## Blockers / open
 - **RESOLVED — remote created + pushed.** User created the repo; note it's named **`hbrady7/draftbattle`** (not `draftbattle.js`, despite the local dir). Remote = `git@github.com:hbrady7/draftbattle.git` (SSH). Phases 0–6 pushed to `origin/main` (`c80ebca`). Push each phase from here.

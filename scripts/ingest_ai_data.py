@@ -89,17 +89,19 @@ def build(xlsx: Path):
     adp = {}
     for (nk, player, pos), gg in raw.groupby(["nk", "PLAYER", "POS"]):
         rooms = gg["ROOM"].nunique()
+        avp = pd.to_numeric(gg["PROJ"], errors="coerce").mean()   # can be NaN if PROJ missing
         adp[nk] = {"name": player, "pos": pos,
                    "adp": round(float(gg["PICK"].mean()), 2),
                    "draft_pct": round(rooms / total_rooms, 4),
-                   "avg_proj": round(float(pd.to_numeric(gg["PROJ"], errors="coerce").mean()), 2)}
+                   "avg_proj": round(float(avp), 2) if avp == avp else None}
 
     out = {"ais": ais, "adp": adp,
            "meta": {"rooms": int(total_rooms), "picks": int(len(raw)),
                     "n_ais": len(ais), "source": xlsx.name,
                     "default_seven": [a["name"] for a in ais[:7]]}}
     PUBLIC.mkdir(parents=True, exist_ok=True)
-    (PUBLIC / "ai_opponents.json").write_text(json.dumps(out))
+    # allow_nan=False → fail loudly rather than emit bare NaN (invalid for JS JSON.parse)
+    (PUBLIC / "ai_opponents.json").write_text(json.dumps(out, allow_nan=False))
     return out
 
 

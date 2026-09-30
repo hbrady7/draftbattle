@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { SLOT_ORDER, teamForPick, pickMeta } from "../sim/bbDraftLogic.js";
 import { pickProbabilities } from "../opponents/pickModel.js";
+import { pickProbabilities as aiPickProbs, aiByName } from "../opponents/aiModel.js";
 import { useSim } from "../sim/useSim.js";
 import { posColor } from "../lib/viz.jsx";
 
@@ -13,29 +14,31 @@ function needMul(counts, pos) {
   return c < t ? 2.2 : c < t + 2 ? 1.2 : 0.5;
 }
 
-/** P(player still available at my next pick) via the opponent model over interim picks. */
-function pSurvive(player, available, picksLen, my0, profiles) {
-  let o = picksLen;
-  const interim = [];
-  // skip to my next pick
+/** P(player still available at my next pick) over interim opponent picks.
+ *  ctx = { aiEnabled, aiSeats, aiMap, adp, profiles } — uses the data-driven AI
+ *  model (real 25-room behavior) per seat when enabled, else the synthetic model. */
+function pSurvive(player, available, picksLen, my0, ctx) {
+  const idx = available.findIndex((p) => p.id === player.id);
+  if (idx < 0) return 1;
+  let o = picksLen, surv = 1, steps = 0;
   if (teamForPick(o) === my0) o++;
-  while (o < N_TEAMS * N_ROUNDS && teamForPick(o) !== my0 && interim.length < 14) {
-    interim.push(teamForPick(o)); o++;
-  }
-  let surv = 1;
-  const counts = {};
-  for (const team of interim) {
-    const pr = pickProbabilities(available, counts[team] || { QB: 0, RB: 0, WR: 0, TE: 0 },
-      [], profiles[team]);
-    const i = available.findIndex((p) => p.id === player.id);
-    if (i >= 0) surv *= (1 - (pr[i] || 0));
+  while (o < N_TEAMS * N_ROUNDS && teamForPick(o) !== my0 && steps < 14) {
+    const team = teamForPick(o), round = Math.floor(o / N_TEAMS) + 1;
+    let pr = null;
+    if (ctx.aiEnabled && ctx.aiSeats?.[team] && ctx.aiMap[ctx.aiSeats[team]]) {
+      pr = aiPickProbs(available, ctx.aiMap[ctx.aiSeats[team]], round, { adp: ctx.adp });
+    } else if (ctx.profiles) {
+      pr = pickProbabilities(available, { QB: 0, RB: 0, WR: 0, TE: 0 }, [], ctx.profiles[team]);
+    }
+    if (pr) surv *= (1 - (pr[idx] || 0));
+    o++; steps++;
   }
   return surv;
 }
 
 // Candidate set to evaluate (§12): best-available per position + top by need-weighted
 // projection, up to `count`. Win% for each is computed by the sim (EVALUATE).
-function candidateSet(available, myRoster, picksLen, my0, profiles, count = 12) {
+function candidateSet(available, myRoster, picksLen, my0, ctx, count = 12) {
   const counts = { QB: 0, RB: 0, WR: 0, TE: 0 };
   for (const p of myRoster) counts[p.position] = (counts[p.position] || 0) + 1;
   const scored = available.map((p) => ({ p, score: (p.mean ?? 0) * needMul(counts, p.position) }));
@@ -48,25 +51,42 @@ function candidateSet(available, myRoster, picksLen, my0, profiles, count = 12) 
   }
   for (const s of scored) { if (recs.length >= count) break; if (!picked.has(s.p.id)) { picked.add(s.p.id); recs.push(s); } }
   return recs.slice(0, count)
-    .map(({ p, score }) => ({ p, score, pSurv: pSurvive(p, available, picksLen, my0, profiles) }));
+    .map(({ p, score }) => ({ p, score, pSurv: pSurvive(p, available, picksLen, my0, ctx) }));
 }
 
-export default function DraftRoomTab({ board, sim, opponents }) {
+export default function DraftRoomTab({ board, sim, opponents, aiData }) {
   const [mySeat, setMySeat] = useState(4);
   const [picks, setPicks] = useState([]);
   const [search, setSearch] = useState("");
-  const simApi = useSim(board, sim, opponents, { universeSize: 200, nSim: 12000 });
+  const simApi = useSim(board, sim, opponents, aiData, { universeSize: 200, nSim: 12000 });
   const [win, setWin] = useState({ floor: null, fill: null });
   const [myStats, setMyStats] = useState(null);
   const [recWin, setRecWin] = useState(null);    // { id: winPct } per candidate (§12)
   const [recBase, setRecBase] = useState(null);   // auto-pick baseline win%
   const [recLoading, setRecLoading] = useState(false);
+  const [aiSeats, setAiSeats] = useState([]);     // array[8] of AI names (null = my seat)
 
+  const aiEnabled = !!(aiData && aiData.ais && aiData.ais.length);
+  const aiMap = useMemo(() => aiByName(aiData), [aiData]);
   const byId = useMemo(() => new Map(board.map((p) => [p.id, p])), [board]);
   const draftedIds = useMemo(() => new Set(picks.map((p) => p.id)), [picks]);
   const my0 = mySeat - 1;
   const currentOverall = picks.length;
   const currentTeam = currentOverall < N_TEAMS * N_ROUNDS ? teamForPick(currentOverall) : null;
+
+  // Default seat→AI assignment: the 7 most-sampled AIs spread across non-my-seat seats.
+  useEffect(() => {
+    if (!aiEnabled) { setAiSeats([]); return; }
+    const seven = aiData.meta?.default_seven ?? aiData.ais.slice(0, 7).map((a) => a.name);
+    const out = Array(N_TEAMS).fill(null);
+    let j = 0;
+    for (let s = 0; s < N_TEAMS; s++) { if (s === my0) continue; out[s] = seven[j % seven.length] ?? null; j++; }
+    setAiSeats(out);
+  }, [aiEnabled, my0, aiData]);
+  const aiSeatNames = aiEnabled && aiSeats.length ? aiSeats : null;
+  const recCtx = useMemo(
+    () => ({ aiEnabled, aiSeats, aiMap, adp: aiData?.adp, profiles: opponents?.profiles }),
+    [aiEnabled, aiSeats, aiMap, aiData, opponents]);
 
   const rostersByTeam = useMemo(() => {
     const r = Array.from({ length: N_TEAMS }, () => []);
@@ -82,9 +102,9 @@ export default function DraftRoomTab({ board, sim, opponents }) {
     let cancel = false;
     simApi.score(rLocal, my0).then((res) => { if (!cancel) { setWin((w) => ({ ...w, floor: res.winPct })); setMyStats(res); } });
     const availableIdx = simApi.universe.players.filter((p) => !draftedIds.has(p.id)).map((p) => p.idx);
-    simApi.fill(rLocal, availableIdx, currentOverall, my0, 24).then((res) => { if (!cancel) setWin((w) => ({ ...w, fill: res.winPct })); });
+    simApi.fill(rLocal, availableIdx, currentOverall, my0, 24, aiSeatNames).then((res) => { if (!cancel) setWin((w) => ({ ...w, fill: res.winPct })); });
     return () => { cancel = true; };
-  }, [picks, simApi.ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [picks, simApi.ready, aiSeatNames]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const available = useMemo(() => {
     const uni = simApi.universe?.pool ?? board;
@@ -98,8 +118,8 @@ export default function DraftRoomTab({ board, sim, opponents }) {
   }, [available, search]);
 
   const recs = useMemo(
-    () => (opponents ? candidateSet(available, rostersByTeam[my0], picks.length, my0, opponents.profiles, 12) : []),
-    [available, rostersByTeam, picks.length, my0, opponents]);
+    () => ((opponents || aiEnabled) ? candidateSet(available, rostersByTeam[my0], picks.length, my0, recCtx, 12) : []),
+    [available, rostersByTeam, picks.length, my0, recCtx, opponents, aiEnabled]);
 
   // §12 per-candidate win%: only when it's my pick (ranks what to draft *now*).
   useEffect(() => {
@@ -111,14 +131,14 @@ export default function DraftRoomTab({ board, sim, opponents }) {
     const candLocal = recs.map(({ p }) => localOf.get(p.id)).filter((x) => x != null);
     if (!candLocal.length) return;
     let cancel = false; setRecLoading(true);
-    simApi.evaluate(rLocal, availableIdx, currentOverall, my0, candLocal, 12).then((res) => {
+    simApi.evaluate(rLocal, availableIdx, currentOverall, my0, candLocal, 12, aiSeatNames).then((res) => {
       if (cancel) return;
       const map = {};
       for (const r of res.results) { const pl = simApi.universe.players[r.localIdx]; if (pl) map[pl.id] = r.winPct; }
       setRecWin(map); setRecBase(res.baseline); setRecLoading(false);
     });
     return () => { cancel = true; };
-  }, [picks, simApi.ready, currentTeam, my0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [picks, simApi.ready, currentTeam, my0, aiSeatNames]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Rank candidates by win% when available (else by need-weighted projection), top 8.
   const ranked = useMemo(() => {
@@ -172,7 +192,12 @@ export default function DraftRoomTab({ board, sim, opponents }) {
           <div className="winmeta">
             {myStats ? <>proj {myStats.myMean.toFixed(0)} pts · 90% CI [{myStats.p05.toFixed(0)}–{myStats.p95.toFixed(0)}] · rank {myStats.rank}/8</> : "draft a player to start the sim"}
           </div>
-          <div className="winnote">8-team baseline is 12.5%; a strong draft lands ~18–25%.{!simApi.ready && " (sim loading…)"}</div>
+          <div className="winnote">
+            {aiEnabled
+              ? <>vs your assigned AIs — they draft rigid archetypes, so optimal play beats them often and this runs high. Decide on each player's <b>Δ&nbsp;win% (WPA)</b> + the floor. 8-team baseline 12.5%.</>
+              : <>8-team baseline is 12.5%; a strong draft lands ~18–25%.</>}
+            {!simApi.ready && " (sim loading…)"}
+          </div>
         </div>
         <div className="dr-controls">
           <button onClick={undo} disabled={!picks.length}>Undo</button>
@@ -180,6 +205,21 @@ export default function DraftRoomTab({ board, sim, opponents }) {
           <button onClick={exportJson} disabled={!picks.length}>Export JSON</button>
         </div>
       </div>
+
+      {aiEnabled && (
+        <div className="ai-assign">
+          <span className="muted small">Opponents — real AI models from {aiData.meta?.rooms ?? 25} rooms · assign each seat:</span>
+          {Array.from({ length: N_TEAMS }, (_, t) => (t !== my0 ? (
+            <label key={t} className="ai-seat">
+              <span className="ai-seat-n">T{t + 1}</span>
+              <select value={aiSeats[t] ?? ""}
+                onChange={(e) => { const v = e.target.value; setAiSeats((prev) => { const n = [...prev]; n[t] = v || null; return n; }); }}>
+                {aiData.ais.map((a) => <option key={a.name} value={a.name}>{a.name}{a.archetype ? ` — ${a.archetype}` : ""}</option>)}
+              </select>
+            </label>
+          ) : null))}
+        </div>
+      )}
 
       <div className="dr-body">
         <div className="dr-grid-wrap">
@@ -205,12 +245,19 @@ export default function DraftRoomTab({ board, sim, opponents }) {
             </tbody>
           </table>
           <div className="pred-strips">
-            {Array.from({ length: N_TEAMS }, (_, t) => t !== my0 && opponents && (
+            {Array.from({ length: N_TEAMS }, (_, t) => t !== my0 && (opponents || aiEnabled) && (
               <div key={t} className="pred-strip">
-                <span className="pred-team">T{t + 1} likely next:</span>
+                <span className="pred-team">{aiEnabled && aiSeats[t] ? aiSeats[t] : `T${t + 1}`} likely next:</span>
                 {(() => {
-                  const counts = {}; for (const p of rostersByTeam[t]) counts[p.position] = (counts[p.position] || 0) + 1;
-                  const pr = pickProbabilities(available, counts, [], opponents.profiles[t]);
+                  let o = currentOverall; while (o < N_TEAMS * N_ROUNDS && teamForPick(o) !== t) o++;
+                  const round = Math.floor(o / N_TEAMS) + 1;
+                  let pr;
+                  if (aiEnabled && aiSeats[t] && aiMap[aiSeats[t]]) {
+                    pr = aiPickProbs(available, aiMap[aiSeats[t]], round, { adp: aiData.adp });
+                  } else {
+                    const counts = {}; for (const p of rostersByTeam[t]) counts[p.position] = (counts[p.position] || 0) + 1;
+                    pr = pickProbabilities(available, counts, [], opponents.profiles[t]);
+                  }
                   return available.map((p, i) => ({ p, pr: pr[i] })).sort((a, b) => b.pr - a.pr).slice(0, 3)
                     .map(({ p, pr }) => <span key={p.id} className="pred-chip">{p.name.split(" ").slice(-1)[0]} {(pr * 100).toFixed(0)}%</span>);
                 })()}

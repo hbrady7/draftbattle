@@ -161,6 +161,11 @@ body {
 .rec-sub2 span { color: var(--muted); }
 .rec-base { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border); }
 
+/* seat → real-AI assignment */
+.ai-assign { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 8px 10px; margin-bottom: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; }
+.ai-seat { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.ai-seat select { background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; font-size: 11px; max-width: 210px; }
+
 /* ---- Data ---- */
 .data-tab { display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
 .card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }

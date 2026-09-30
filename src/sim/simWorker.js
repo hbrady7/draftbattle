@@ -12,9 +12,16 @@
  */
 import { buildSimMatrix, bestBallTeamScores, setRngSeed, N_TEAMS } from "./simCore.js";
 import { completeDraft, teamForPick } from "./draftSim.js";
+import { aiByName } from "../opponents/aiModel.js";
 
 let matrix = null, positionsByIdx = null, N = 0, nSim = 0;
-let players = null, profiles = null;
+let players = null, profiles = null, aiByNameMap = null, adp = null;
+
+/** Resolve per-seat AI model objects from seat name assignments (null = my seat). */
+function seatModels(aiSeatNames) {
+  if (!aiSeatNames || !aiByNameMap) return null;
+  return aiSeatNames.map((n) => (n ? aiByNameMap[n] ?? null : null));
+}
 
 function winAndStats(rostersByTeam, myTeam) {
   const teamScores = rostersByTeam.map((idxs) =>
@@ -44,6 +51,8 @@ self.onmessage = (e) => {
   if (m.type === "INIT") {
     players = m.players;
     profiles = m.profiles;
+    aiByNameMap = m.aiData ? aiByName(m.aiData) : null;
+    adp = m.aiData?.adp ?? null;
     setRngSeed(m.seed ?? 12345);
     nSim = m.nSim ?? 12000;
     N = players.length;
@@ -65,10 +74,11 @@ self.onmessage = (e) => {
     const myRoster = rows(m.rostersByTeam[m.myTeam]);
     const otherRosters = m.rostersByTeam.filter((_, t) => t !== m.myTeam).map(rows);
     const availablePlayers = m.availableIdx.map((li) => players[li]);
+    const aiBySeat = seatModels(m.aiSeatNames);
     let winSum = 0;
     for (let f = 0; f < fills; f++) {
       const rosterIdxs = completeDraft(myRoster, otherRosters, availablePlayers,
-        m.pickIndex, m.myTeam, { profiles, rng: Math.random });
+        m.pickIndex, m.myTeam, { profiles, aiBySeat, adp, rng: Math.random });
       winSum += winAndStats(rosterIdxs, m.myTeam).winPct;
     }
     self.postMessage({ type: "FILL_RESULT", winPct: winSum / fills, chunkId: m.chunkId });
@@ -83,12 +93,13 @@ self.onmessage = (e) => {
     const myBase = rows(m.rostersByTeam[m.myTeam]);
     const otherRosters = m.rostersByTeam.filter((_, t) => t !== m.myTeam).map(rows);
     const avail = (drop) => m.availableIdx.filter((li) => li !== drop).map((li) => players[li]);
+    const aiBySeat = seatModels(m.aiSeatNames);
 
     const meanFill = (myRoster, available, fromPick) => {
       let sum = 0;
       for (let f = 0; f < fills; f++) {
         const rosterIdxs = completeDraft(myRoster, otherRosters, available, fromPick, m.myTeam,
-          { profiles, rng: Math.random });
+          { profiles, aiBySeat, adp, rng: Math.random });
         sum += winAndStats(rosterIdxs, m.myTeam).winPct;
       }
       return sum / fills;
