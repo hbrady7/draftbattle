@@ -26,6 +26,22 @@ PUBLIC = ROOT / "public" / "data"
 DEFAULT_XLSX = Path.home() / "Downloads" / "Week4_AI_Draft_Prediction_Model.xlsx"
 POS = ("QB", "RB", "WR", "TE")
 N_ROUNDS = 11
+# Live rooms exported from the Draft Room (input_data/week*/ai_rooms_live.csv, seat→AI
+# inferred from position sequences). They reflect the CURRENT bot behaviour, so
+# each live room counts LIVE_WEIGHT× a workbook room. Leave-one-room-out on the
+# 3 live rooms: round-position accuracy 172/231 (profile scripts) → 200/231.
+LIVE_WEIGHT = 100.0
+LIVE_GLOB = "input_data/week*/ai_rooms_live.csv"
+
+
+def _seq_medoid(seqs):
+    """The observed full position sequence with the least weighted Hamming
+    distance to all observed sequences — always a real (valid) roster build."""
+    full = [(s, w) for s, w in seqs if len(s) == N_ROUNDS]
+    if not full:
+        return None
+    ham = lambda a, b: sum(x != y for x, y in zip(a, b))
+    return min((s for s, _ in full), key=lambda c: sum(w * ham(c, s) for s, w in full))
 
 
 def _num(x, d=0.0):
@@ -39,6 +55,17 @@ def _num(x, d=0.0):
 def build(xlsx: Path):
     raw = pd.read_excel(xlsx, sheet_name="RAW PICK LOG")
     raw = raw.dropna(subset=["TEAM", "PLAYER", "POS", "ROUND"])
+    raw["W"] = 1.0
+    lives = [pd.read_csv(f) for f in sorted(ROOT.glob(LIVE_GLOB))]
+    n_live = 0
+    if lives:
+        live = pd.concat(lives, ignore_index=True).dropna(subset=["TEAM", "PLAYER", "POS", "ROUND"])
+        live["ROOM"] = live["ROOM"].astype(str)
+        live["W"] = LIVE_WEIGHT
+        n_live = live["ROOM"].nunique()
+        raw["ROOM"] = raw["ROOM"].astype(str)
+        raw = pd.concat([raw, live[[c for c in live.columns if c in raw.columns or c == "W"]]],
+                        ignore_index=True)
     raw["nk"] = raw["PLAYER"].map(idmod.name_key)
     total_rooms = raw["ROOM"].nunique()
 
@@ -59,26 +86,35 @@ def build(xlsx: Path):
     opp = raw[raw["TEAM"] != "YOU"]
     for name, g in opp.groupby("TEAM"):
         rooms_faced = int(g["ROOM"].nunique())
-        # position-by-round distribution
+        room_w = g.groupby("ROOM")["W"].first()
+        w_total = float(room_w.sum())
+        # position-by-round distribution (room-weighted: live rooms dominate)
         pbr = {}
         for rnd in range(1, N_ROUNDS + 1):
             gr = g[g["ROUND"] == rnd]
             if len(gr) == 0:
                 continue
-            counts = gr["POS"].value_counts(normalize=True)
+            counts = gr.groupby("POS")["W"].sum() / gr["W"].sum()
             pbr[str(rnd)] = {p: round(float(counts.get(p, 0.0)), 4) for p in POS}
-        # player-targeting priors: share of the AI's rooms a player appeared in
+        # player-targeting priors: weighted share of the AI's rooms a player appeared in
         priors = {}
         for (nk, player, pos), gg in g.groupby(["nk", "PLAYER", "POS"]):
             rooms = gg["ROOM"].nunique()
+            w_rooms = float(gg.groupby("ROOM")["W"].first().sum())
             priors[nk] = {"name": player, "pos": pos,
-                          "share": round(rooms / rooms_faced, 4),
+                          "share": round(w_rooms / w_total, 4),
                           "avg_round": round(float(gg["ROUND"].mean()), 2),
                           "n": int(rooms)}
         meta = prof_by_last.get(name, {})
+        seqs = [(list(gs.sort_values("ROUND")["POS"]), float(gs["W"].iloc[0]))
+                for _, gs in g.groupby("ROOM")]
+        live_rooms = int((room_w > 1).sum())
+        script = (_seq_medoid(seqs) if live_rooms else None) or meta.get("round_script")
         ais.append({"name": name, "full_name": meta.get("full_name", name),
                     "archetype": meta.get("archetype", ""),
-                    "round_script": meta.get("round_script"),
+                    "round_script": script,
+                    "profile_script": meta.get("round_script"),
+                    "live_rooms": live_rooms,
                     "script_holds": meta.get("script_holds"),
                     "reliable_through": meta.get("reliable_through", ""),
                     "rooms_faced": rooms_faced, "pos_by_round": pbr,
@@ -88,7 +124,7 @@ def build(xlsx: Path):
     # global ADP / draft rate (all teams incl. YOU, for board annotation)
     adp = {}
     for (nk, player, pos), gg in raw.groupby(["nk", "PLAYER", "POS"]):
-        rooms = gg["ROOM"].nunique()
+        rooms = gg["ROOM"].nunique()   # global ADP: unweighted
         avp = pd.to_numeric(gg["PROJ"], errors="coerce").mean()   # can be NaN if PROJ missing
         adp[nk] = {"name": player, "pos": pos,
                    "adp": round(float(gg["PICK"].mean()), 2),
@@ -96,9 +132,10 @@ def build(xlsx: Path):
                    "avg_proj": round(float(avp), 2) if avp == avp else None}
 
     out = {"ais": ais, "adp": adp,
-           "meta": {"rooms": int(total_rooms), "picks": int(len(raw)),
+           "meta": {"rooms": int(total_rooms), "picks": int(len(raw)), "live_rooms": int(n_live),
+                    "live_weight": LIVE_WEIGHT,
                     "n_ais": len(ais), "source": xlsx.name,
-                    "default_seven": [a["name"] for a in ais[:7]]}}
+                    "default_seven": [a["name"] for a in ais if a["rooms_faced"] >= 15][:7]}}
     PUBLIC.mkdir(parents=True, exist_ok=True)
     # allow_nan=False → fail loudly rather than emit bare NaN (invalid for JS JSON.parse)
     (PUBLIC / "ai_opponents.json").write_text(json.dumps(out, allow_nan=False))

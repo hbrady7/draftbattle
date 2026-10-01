@@ -1,0 +1,265 @@
+ROOM,PROJ SET,PICK,ROUND,SLOT,TEAM,PLAYER,POS,PROJ,SOURCE
+L1,live,1,1,1,Cobble,Bryce Young,QB,25.79,draft_seat2.json
+L1,live,2,1,2,YOU,Jahmyr Gibbs,RB,27.03,draft_seat2.json
+L1,live,3,1,3,Tubbs,Derrick Henry,RB,23.0,draft_seat2.json
+L1,live,4,1,4,Paterson,Josh Allen,QB,25.68,draft_seat2.json
+L1,live,5,1,5,Krebs,Brock Purdy,QB,24.89,draft_seat2.json
+L1,live,6,1,6,Beaumont,Amon-Ra St. Brown,WR,19.37,draft_seat2.json
+L1,live,7,1,7,Hocking,Christian McCaffrey,RB,21.68,draft_seat2.json
+L1,live,8,1,8,Mullins,Trevor Lawrence,QB,22.12,draft_seat2.json
+L1,live,9,2,8,Mullins,Ja'Marr Chase,WR,18.92,draft_seat2.json
+L1,live,10,2,7,Hocking,Bijan Robinson,RB,20.26,draft_seat2.json
+L1,live,11,2,6,Beaumont,Puka Nacua,WR,17.27,draft_seat2.json
+L1,live,12,2,5,Krebs,Jonathan Taylor,RB,19.23,draft_seat2.json
+L1,live,13,2,4,Paterson,Dak Prescott,QB,21.59,draft_seat2.json
+L1,live,14,2,3,Tubbs,Ashton Jeanty,RB,17.37,draft_seat2.json
+L1,live,15,2,2,YOU,Kenneth Walker III,RB,17.23,draft_seat2.json
+L1,live,16,2,1,Cobble,Justin Jefferson,WR,16.71,draft_seat2.json
+L1,live,17,3,1,Cobble,Jalen Hurts,QB,20.92,draft_seat2.json
+L1,live,18,3,2,YOU,Jaxon Smith-Njigba,WR,16.61,draft_seat2.json
+L1,live,19,3,3,Tubbs,Drake London,WR,15.97,draft_seat2.json
+L1,live,20,3,4,Paterson,Trey McBride,TE,17.04,draft_seat2.json
+L1,live,21,3,5,Krebs,Nico Collins,WR,15.76,draft_seat2.json
+L1,live,22,3,6,Beaumont,Parker Washington,WR,14.31,draft_seat2.json
+L1,live,23,3,7,Hocking,Patrick Mahomes,QB,21.1,draft_seat2.json
+L1,live,24,3,8,Mullins,Zay Flowers,WR,14.0,draft_seat2.json
+L1,live,25,4,8,Mullins,Garrett Wilson,WR,13.92,draft_seat2.json
+L1,live,26,4,7,Hocking,Lamar Jackson,QB,21.11,draft_seat2.json
+L1,live,27,4,6,Beaumont,Chris Olave,WR,13.91,draft_seat2.json
+L1,live,28,4,5,Krebs,Joe Burrow,QB,20.95,draft_seat2.json
+L1,live,29,4,4,Paterson,James Cook III,RB,15.58,draft_seat2.json
+L1,live,30,4,3,Tubbs,Drake Maye,QB,20.85,draft_seat2.json
+L1,live,31,4,2,YOU,Brock Bowers,TE,14.25,draft_seat2.json
+L1,live,32,4,1,Cobble,Bucky Irving,RB,15.14,draft_seat2.json
+L1,live,33,5,1,Cobble,Cam Skattebo,RB,14.61,draft_seat2.json
+L1,live,34,5,2,YOU,Chase Brown,RB,13.47,draft_seat2.json
+L1,live,35,5,3,Tubbs,Daniel Jones,QB,20.31,draft_seat2.json
+L1,live,36,5,4,Paterson,DeVonta Smith,WR,13.69,draft_seat2.json
+L1,live,37,5,5,Krebs,Tyler Warren,TE,13.93,draft_seat2.json
+L1,live,38,5,6,Beaumont,Davante Adams,WR,13.48,draft_seat2.json
+L1,live,39,5,7,Hocking,Chuba Hubbard,RB,14.64,draft_seat2.json
+L1,live,40,5,8,Mullins,Tee Higgins,WR,13.14,draft_seat2.json
+L1,live,41,6,8,Mullins,George Kittle,TE,13.09,draft_seat2.json
+L1,live,42,6,7,Hocking,Stefon Diggs,WR,13.1,draft_seat2.json
+L1,live,43,6,6,Beaumont,Jeremiyah Love,RB,14.2,draft_seat2.json
+L1,live,44,6,5,Krebs,Aaron Jones Sr.,RB,14.01,draft_seat2.json
+L1,live,45,6,4,Paterson,David Montgomery,RB,13.87,draft_seat2.json
+L1,live,46,6,3,Tubbs,Javonte Williams,RB,13.44,draft_seat2.json
+L1,live,47,6,2,YOU,CeeDee Lamb,WR,12.56,draft_seat2.json
+L1,live,48,6,1,Cobble,D'Andre Swift,RB,13.32,draft_seat2.json
+L1,live,49,7,1,Cobble,Jaylen Warren,RB,13.34,draft_seat2.json
+L1,live,50,7,2,YOU,Rashee Rice,WR,12.83,draft_seat2.json
+L1,live,51,7,3,Tubbs,George Pickens,WR,12.85,draft_seat2.json
+L1,live,52,7,4,Paterson,Terry McLaurin,WR,12.58,draft_seat2.json
+L1,live,53,7,5,Krebs,Emeka Egbuka,WR,12.54,draft_seat2.json
+L1,live,54,7,6,Beaumont,Kirk Cousins,QB,20.18,draft_seat2.json
+L1,live,55,7,7,Hocking,Braelon Allen,RB,12.49,draft_seat2.json
+L1,live,56,7,8,Mullins,C.J. Stroud,QB,20.06,draft_seat2.json
+L1,live,57,8,8,Mullins,Deebo Samuel Sr.,WR,12.38,draft_seat2.json
+L1,live,58,8,7,Hocking,Christian Watson,WR,12.55,draft_seat2.json
+L1,live,59,8,6,Beaumont,Sam Darnold,QB,19.91,draft_seat2.json
+L1,live,60,8,5,Krebs,Bhayshul Tuten,RB,12.43,draft_seat2.json
+L1,live,61,8,4,Paterson,Quinshon Judkins,RB,11.84,draft_seat2.json
+L1,live,62,8,3,Tubbs,Josh Downs,WR,12.17,draft_seat2.json
+L1,live,63,8,2,YOU,Michael Wilson,WR,12.73,draft_seat2.json
+L1,live,64,8,1,Cobble,Mike Evans,WR,12.08,draft_seat2.json
+L1,live,65,9,1,Cobble,Travis Kelce,TE,11.91,draft_seat2.json
+L1,live,66,9,2,YOU,Tyler Shough,QB,18.95,draft_seat2.json
+L1,live,67,9,3,Tubbs,Isaiah Likely,TE,11.6,draft_seat2.json
+L1,live,68,9,4,Paterson,Luther Burden III,WR,11.41,draft_seat2.json
+L1,live,69,9,5,Krebs,Kyren Williams,RB,11.45,draft_seat2.json
+L1,live,70,9,6,Beaumont,Saquon Barkley,RB,11.22,draft_seat2.json
+L1,live,71,9,7,Hocking,Carnell Tate,WR,11.08,draft_seat2.json
+L1,live,72,9,8,Mullins,Omarion Hampton,RB,11.2,draft_seat2.json
+L1,live,73,10,8,Mullins,Kyler Murray,QB,19.45,draft_seat2.json
+L1,live,74,10,7,Hocking,Harold Fannin Jr.,TE,11.05,draft_seat2.json
+L1,live,75,10,6,Beaumont,Marcus Mariota,QB,18.61,draft_seat2.json
+L1,live,76,10,5,Krebs,DJ Moore,WR,11.29,draft_seat2.json
+L1,live,77,10,4,Paterson,Tony Pollard,RB,11.13,draft_seat2.json
+L1,live,78,10,3,Tubbs,Malik Nabers,WR,11.14,draft_seat2.json
+L1,live,79,10,2,YOU,Jameson Williams,WR,8.5,draft_seat2.json
+L1,live,80,10,1,Cobble,Jaylen Waddle,WR,10.68,draft_seat2.json
+L1,live,81,11,1,Cobble,Tetairoa McMillan,WR,11.02,draft_seat2.json
+L1,live,82,11,2,YOU,Matthew Stafford,QB,18.06,draft_seat2.json
+L1,live,83,11,3,Tubbs,Ollie Gordon II,RB,10.81,draft_seat2.json
+L1,live,84,11,4,Paterson,DK Metcalf,WR,10.71,draft_seat2.json
+L1,live,85,11,5,Krebs,Jordan Love,QB,18.0,draft_seat2.json
+L1,live,86,11,6,Beaumont,Dalton Kincaid,TE,10.81,draft_seat2.json
+L1,live,87,11,7,Hocking,Matthew Golden,WR,10.7,draft_seat2.json
+L1,live,88,11,8,Mullins,Rhamondre Stevenson,RB,10.74,draft_seat2.json
+L2,live,1,1,1,Hocking,Jahmyr Gibbs,RB,27.03,draft_seat6.json
+L2,live,2,1,2,Paterson,Bryce Young,QB,25.79,draft_seat6.json
+L2,live,3,1,3,Mullins,Josh Allen,QB,25.68,draft_seat6.json
+L2,live,4,1,4,Cobble,Brock Purdy,QB,24.89,draft_seat6.json
+L2,live,5,1,5,Beaumont,Amon-Ra St. Brown,WR,19.37,draft_seat6.json
+L2,live,6,1,6,YOU,Bijan Robinson,RB,20.26,draft_seat6.json
+L2,live,7,1,7,Tubbs,Derrick Henry,RB,23.0,draft_seat6.json
+L2,live,8,1,8,Krebs,Trevor Lawrence,QB,22.12,draft_seat6.json
+L2,live,9,2,8,Krebs,Christian McCaffrey,RB,21.68,draft_seat6.json
+L2,live,10,2,7,Tubbs,Jonathan Taylor,RB,19.23,draft_seat6.json
+L2,live,11,2,6,YOU,Jaxon Smith-Njigba,WR,16.61,draft_seat6.json
+L2,live,12,2,5,Beaumont,Ja'Marr Chase,WR,18.92,draft_seat6.json
+L2,live,13,2,4,Cobble,Puka Nacua,WR,17.27,draft_seat6.json
+L2,live,14,2,3,Mullins,Justin Jefferson,WR,16.71,draft_seat6.json
+L2,live,15,2,2,Paterson,Dak Prescott,QB,21.59,draft_seat6.json
+L2,live,16,2,1,Hocking,Ashton Jeanty,RB,17.37,draft_seat6.json
+L2,live,17,3,1,Hocking,Jalen Hurts,QB,20.92,draft_seat6.json
+L2,live,18,3,2,Paterson,Kenneth Walker III,RB,17.23,draft_seat6.json
+L2,live,19,3,3,Mullins,Drake London,WR,15.97,draft_seat6.json
+L2,live,20,3,4,Cobble,Patrick Mahomes,QB,21.1,draft_seat6.json
+L2,live,21,3,5,Beaumont,Nico Collins,WR,15.76,draft_seat6.json
+L2,live,22,3,6,YOU,Trey McBride,TE,17.04,draft_seat6.json
+L2,live,23,3,7,Tubbs,James Cook III,RB,15.58,draft_seat6.json
+L2,live,24,3,8,Krebs,Bucky Irving,RB,15.14,draft_seat6.json
+L2,live,25,4,8,Krebs,Lamar Jackson,QB,21.11,draft_seat6.json
+L2,live,26,4,7,Tubbs,Joe Burrow,QB,20.95,draft_seat6.json
+L2,live,27,4,6,YOU,Chris Olave,WR,13.91,draft_seat6.json
+L2,live,28,4,5,Beaumont,Parker Washington,WR,14.31,draft_seat6.json
+L2,live,29,4,4,Cobble,Cam Skattebo,RB,14.61,draft_seat6.json
+L2,live,30,4,3,Mullins,Zay Flowers,WR,14.0,draft_seat6.json
+L2,live,31,4,2,Paterson,Brock Bowers,TE,14.25,draft_seat6.json
+L2,live,32,4,1,Hocking,Drake Maye,QB,20.85,draft_seat6.json
+L2,live,33,5,1,Hocking,Chuba Hubbard,RB,14.64,draft_seat6.json
+L2,live,34,5,2,Paterson,Garrett Wilson,WR,13.92,draft_seat6.json
+L2,live,35,5,3,Mullins,DeVonta Smith,WR,13.69,draft_seat6.json
+L2,live,36,5,4,Cobble,Jeremiyah Love,RB,14.2,draft_seat6.json
+L2,live,37,5,5,Beaumont,Davante Adams,WR,13.48,draft_seat6.json
+L2,live,38,5,6,YOU,Chase Brown,RB,13.47,draft_seat6.json
+L2,live,39,5,7,Tubbs,Daniel Jones,QB,20.31,draft_seat6.json
+L2,live,40,5,8,Krebs,Tyler Warren,TE,13.93,draft_seat6.json
+L2,live,41,6,8,Krebs,Aaron Jones Sr.,RB,14.01,draft_seat6.json
+L2,live,42,6,7,Tubbs,David Montgomery,RB,13.87,draft_seat6.json
+L2,live,43,6,6,YOU,CeeDee Lamb,WR,12.56,draft_seat6.json
+L2,live,44,6,5,Beaumont,Javonte Williams,RB,13.44,draft_seat6.json
+L2,live,45,6,4,Cobble,D'Andre Swift,RB,13.32,draft_seat6.json
+L2,live,46,6,3,Mullins,George Kittle,TE,13.09,draft_seat6.json
+L2,live,47,6,2,Paterson,Jaylen Warren,RB,13.34,draft_seat6.json
+L2,live,48,6,1,Hocking,Tee Higgins,WR,13.14,draft_seat6.json
+L2,live,49,7,1,Hocking,Braelon Allen,RB,12.49,draft_seat6.json
+L2,live,50,7,2,Paterson,Stefon Diggs,WR,13.1,draft_seat6.json
+L2,live,51,7,3,Mullins,Kirk Cousins,QB,20.18,draft_seat6.json
+L2,live,52,7,4,Cobble,George Pickens,WR,12.85,draft_seat6.json
+L2,live,53,7,5,Beaumont,C.J. Stroud,QB,20.06,draft_seat6.json
+L2,live,54,7,6,YOU,Kyren Williams,RB,11.45,draft_seat6.json
+L2,live,55,7,7,Tubbs,Rashee Rice,WR,12.83,draft_seat6.json
+L2,live,56,7,8,Krebs,Terry McLaurin,WR,12.58,draft_seat6.json
+L2,live,57,8,8,Krebs,Emeka Egbuka,WR,12.54,draft_seat6.json
+L2,live,58,8,7,Tubbs,Deebo Samuel Sr.,WR,12.38,draft_seat6.json
+L2,live,59,8,6,YOU,Michael Wilson,WR,12.73,draft_seat6.json
+L2,live,60,8,5,Beaumont,Sam Darnold,QB,19.91,draft_seat6.json
+L2,live,61,8,4,Cobble,Bhayshul Tuten,RB,12.43,draft_seat6.json
+L2,live,62,8,3,Mullins,Christian Watson,WR,12.55,draft_seat6.json
+L2,live,63,8,2,Paterson,Quinshon Judkins,RB,11.84,draft_seat6.json
+L2,live,64,8,1,Hocking,Josh Downs,WR,12.17,draft_seat6.json
+L2,live,65,9,1,Hocking,Mike Evans,WR,12.08,draft_seat6.json
+L2,live,66,9,2,Paterson,Luther Burden III,WR,11.41,draft_seat6.json
+L2,live,67,9,3,Mullins,Saquon Barkley,RB,11.22,draft_seat6.json
+L2,live,68,9,4,Cobble,Travis Kelce,TE,11.91,draft_seat6.json
+L2,live,69,9,5,Beaumont,Omarion Hampton,RB,11.2,draft_seat6.json
+L2,live,70,9,6,YOU,Tyler Shough,QB,18.95,draft_seat6.json
+L2,live,71,9,7,Tubbs,Isaiah Likely,TE,11.6,draft_seat6.json
+L2,live,72,9,8,Krebs,Carnell Tate,WR,11.08,draft_seat6.json
+L2,live,73,10,8,Krebs,DJ Moore,WR,11.29,draft_seat6.json
+L2,live,74,10,7,Tubbs,Malik Nabers,WR,11.14,draft_seat6.json
+L2,live,75,10,6,YOU,Jared Goff,QB,18.18,draft_seat6.json
+L2,live,76,10,5,Beaumont,Kyler Murray,QB,19.45,draft_seat6.json
+L2,live,77,10,4,Cobble,Jaylen Waddle,WR,10.68,draft_seat6.json
+L2,live,78,10,3,Mullins,Marcus Mariota,QB,18.61,draft_seat6.json
+L2,live,79,10,2,Paterson,Tony Pollard,RB,11.13,draft_seat6.json
+L2,live,80,10,1,Hocking,Harold Fannin Jr.,TE,11.05,draft_seat6.json
+L2,live,81,11,1,Hocking,Tetairoa McMillan,WR,11.02,draft_seat6.json
+L2,live,82,11,2,Paterson,DK Metcalf,WR,10.71,draft_seat6.json
+L2,live,83,11,3,Mullins,Ollie Gordon II,RB,10.81,draft_seat6.json
+L2,live,84,11,4,Cobble,Matthew Golden,WR,10.7,draft_seat6.json
+L2,live,85,11,5,Beaumont,Dalton Kincaid,TE,10.81,draft_seat6.json
+L2,live,86,11,6,YOU,Jameson Williams,WR,8.5,draft_seat6.json
+L2,live,87,11,7,Tubbs,Jalen Coker,WR,11.3,draft_seat6.json
+L2,live,88,11,8,Krebs,Matthew Stafford,QB,18.06,draft_seat6.json
+L3,live,1,1,1,Hocking,Jahmyr Gibbs,RB,27.03,draft_seat8 (1).json
+L3,live,2,1,2,Cobble,Bryce Young,QB,25.79,draft_seat8 (1).json
+L3,live,3,1,3,Krebs,Josh Allen,QB,25.68,draft_seat8 (1).json
+L3,live,4,1,4,Beaumont,Amon-Ra St. Brown,WR,19.37,draft_seat8 (1).json
+L3,live,5,1,5,Mullins,Brock Purdy,QB,24.89,draft_seat8 (1).json
+L3,live,6,1,6,Tubbs,Derrick Henry,RB,23.0,draft_seat8 (1).json
+L3,live,7,1,7,Paterson,Trevor Lawrence,QB,22.12,draft_seat8 (1).json
+L3,live,8,1,8,YOU,Bijan Robinson,RB,20.26,draft_seat8 (1).json
+L3,live,9,2,8,YOU,Jaxon Smith-Njigba,WR,16.61,draft_seat8 (1).json
+L3,live,10,2,7,Paterson,Dak Prescott,QB,21.59,draft_seat8 (1).json
+L3,live,11,2,6,Tubbs,Christian McCaffrey,RB,21.68,draft_seat8 (1).json
+L3,live,12,2,5,Mullins,Ja'Marr Chase,WR,18.92,draft_seat8 (1).json
+L3,live,13,2,4,Beaumont,Puka Nacua,WR,17.27,draft_seat8 (1).json
+L3,live,14,2,3,Krebs,Jonathan Taylor,RB,19.23,draft_seat8 (1).json
+L3,live,15,2,2,Cobble,Ashton Jeanty,RB,17.37,draft_seat8 (1).json
+L3,live,16,2,1,Hocking,Kenneth Walker III,RB,17.23,draft_seat8 (1).json
+L3,live,17,3,1,Hocking,Patrick Mahomes,QB,21.1,draft_seat8 (1).json
+L3,live,18,3,2,Cobble,Lamar Jackson,QB,21.11,draft_seat8 (1).json
+L3,live,19,3,3,Krebs,Trey McBride,TE,17.04,draft_seat8 (1).json
+L3,live,20,3,4,Beaumont,Justin Jefferson,WR,16.71,draft_seat8 (1).json
+L3,live,21,3,5,Mullins,Drake London,WR,15.97,draft_seat8 (1).json
+L3,live,22,3,6,Tubbs,Nico Collins,WR,15.76,draft_seat8 (1).json
+L3,live,23,3,7,Paterson,James Cook III,RB,15.58,draft_seat8 (1).json
+L3,live,24,3,8,YOU,Chris Olave,WR,13.91,draft_seat8 (1).json
+L3,live,25,4,8,YOU,Chase Brown,RB,13.47,draft_seat8 (1).json
+L3,live,26,4,7,Paterson,Parker Washington,WR,14.31,draft_seat8 (1).json
+L3,live,27,4,6,Tubbs,Joe Burrow,QB,20.95,draft_seat8 (1).json
+L3,live,28,4,5,Mullins,DeVonta Smith,WR,13.69,draft_seat8 (1).json
+L3,live,29,4,4,Beaumont,Zay Flowers,WR,14.0,draft_seat8 (1).json
+L3,live,30,4,3,Krebs,Jalen Hurts,QB,20.92,draft_seat8 (1).json
+L3,live,31,4,2,Cobble,Chuba Hubbard,RB,14.64,draft_seat8 (1).json
+L3,live,32,4,1,Hocking,Drake Maye,QB,20.85,draft_seat8 (1).json
+L3,live,33,5,1,Hocking,Bucky Irving,RB,15.14,draft_seat8 (1).json
+L3,live,34,5,2,Cobble,Cam Skattebo,RB,14.61,draft_seat8 (1).json
+L3,live,35,5,3,Krebs,Jeremiyah Love,RB,14.2,draft_seat8 (1).json
+L3,live,36,5,4,Beaumont,Garrett Wilson,WR,13.92,draft_seat8 (1).json
+L3,live,37,5,5,Mullins,Davante Adams,WR,13.48,draft_seat8 (1).json
+L3,live,38,5,6,Tubbs,Kirk Cousins,QB,20.18,draft_seat8 (1).json
+L3,live,39,5,7,Paterson,Brock Bowers,TE,14.25,draft_seat8 (1).json
+L3,live,40,5,8,YOU,Javonte Williams,RB,13.44,draft_seat8 (1).json
+L3,live,41,6,8,YOU,CeeDee Lamb,WR,12.56,draft_seat8 (1).json
+L3,live,42,6,7,Paterson,David Montgomery,RB,13.87,draft_seat8 (1).json
+L3,live,43,6,6,Tubbs,Tyler Warren,TE,13.93,draft_seat8 (1).json
+L3,live,44,6,5,Mullins,George Kittle,TE,13.09,draft_seat8 (1).json
+L3,live,45,6,4,Beaumont,Aaron Jones Sr.,RB,14.01,draft_seat8 (1).json
+L3,live,46,6,3,Krebs,D'Andre Swift,RB,13.32,draft_seat8 (1).json
+L3,live,47,6,2,Cobble,Jaylen Warren,RB,13.34,draft_seat8 (1).json
+L3,live,48,6,1,Hocking,Tee Higgins,WR,13.14,draft_seat8 (1).json
+L3,live,49,7,1,Hocking,Bhayshul Tuten,RB,12.43,draft_seat8 (1).json
+L3,live,50,7,2,Cobble,Stefon Diggs,WR,13.1,draft_seat8 (1).json
+L3,live,51,7,3,Krebs,Michael Wilson,WR,12.73,draft_seat8 (1).json
+L3,live,52,7,4,Beaumont,Daniel Jones,QB,20.31,draft_seat8 (1).json
+L3,live,53,7,5,Mullins,C.J. Stroud,QB,20.06,draft_seat8 (1).json
+L3,live,54,7,6,Tubbs,George Pickens,WR,12.85,draft_seat8 (1).json
+L3,live,55,7,7,Paterson,Rashee Rice,WR,12.83,draft_seat8 (1).json
+L3,live,56,7,8,YOU,Tyler Shough,QB,18.95,draft_seat8 (1).json
+L3,live,57,8,8,YOU,Christian Watson,WR,12.55,draft_seat8 (1).json
+L3,live,58,8,7,Paterson,Braelon Allen,RB,12.49,draft_seat8 (1).json
+L3,live,59,8,6,Tubbs,Terry McLaurin,WR,12.58,draft_seat8 (1).json
+L3,live,60,8,5,Mullins,Emeka Egbuka,WR,12.54,draft_seat8 (1).json
+L3,live,61,8,4,Beaumont,Sam Darnold,QB,19.91,draft_seat8 (1).json
+L3,live,62,8,3,Krebs,Deebo Samuel Sr.,WR,12.38,draft_seat8 (1).json
+L3,live,63,8,2,Cobble,Josh Downs,WR,12.17,draft_seat8 (1).json
+L3,live,64,8,1,Hocking,Mike Evans,WR,12.08,draft_seat8 (1).json
+L3,live,65,9,1,Hocking,Luther Burden III,WR,11.41,draft_seat8 (1).json
+L3,live,66,9,2,Cobble,Travis Kelce,TE,11.91,draft_seat8 (1).json
+L3,live,67,9,3,Krebs,Quinshon Judkins,RB,11.84,draft_seat8 (1).json
+L3,live,68,9,4,Beaumont,Kyren Williams,RB,11.45,draft_seat8 (1).json
+L3,live,69,9,5,Mullins,Saquon Barkley,RB,11.22,draft_seat8 (1).json
+L3,live,70,9,6,Tubbs,DJ Moore,WR,11.29,draft_seat8 (1).json
+L3,live,71,9,7,Paterson,Malik Nabers,WR,11.14,draft_seat8 (1).json
+L3,live,72,9,8,YOU,Dalton Kincaid,TE,10.81,draft_seat8 (1).json
+L3,live,73,10,8,YOU,Jameson Williams,WR,8.5,draft_seat8 (1).json
+L3,live,74,10,7,Paterson,Tony Pollard,RB,11.13,draft_seat8 (1).json
+L3,live,75,10,6,Tubbs,Omarion Hampton,RB,11.2,draft_seat8 (1).json
+L3,live,76,10,5,Mullins,Kyler Murray,QB,19.45,draft_seat8 (1).json
+L3,live,77,10,4,Beaumont,Marcus Mariota,QB,18.61,draft_seat8 (1).json
+L3,live,78,10,3,Krebs,Tetairoa McMillan,WR,11.02,draft_seat8 (1).json
+L3,live,79,10,2,Cobble,Jaylen Waddle,WR,10.68,draft_seat8 (1).json
+L3,live,80,10,1,Hocking,Isaiah Likely,TE,11.6,draft_seat8 (1).json
+L3,live,81,11,1,Hocking,DK Metcalf,WR,10.71,draft_seat8 (1).json
+L3,live,82,11,2,Cobble,Matthew Golden,WR,10.7,draft_seat8 (1).json
+L3,live,83,11,3,Krebs,Jameis Winston,QB,17.73,draft_seat8 (1).json
+L3,live,84,11,4,Beaumont,Harold Fannin Jr.,TE,11.05,draft_seat8 (1).json
+L3,live,85,11,5,Mullins,Rhamondre Stevenson,RB,10.74,draft_seat8 (1).json
+L3,live,86,11,6,Tubbs,Ollie Gordon II,RB,10.81,draft_seat8 (1).json
+L3,live,87,11,7,Paterson,Ladd McConkey,WR,10.6,draft_seat8 (1).json
+L3,live,88,11,8,YOU,Jared Goff,QB,18.18,draft_seat8 (1).json

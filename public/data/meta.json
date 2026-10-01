@@ -1,5 +1,5 @@
 {
- "built_at": "2026-09-30T20:53:38.078182+00:00",
+ "built_at": "2026-10-01T18:52:46.207201+00:00",
  "week": 4,
  "season": 2026,
  "n_players": 369,
@@ -19,7 +19,7 @@
  },
  "mean_recipe": "full stack (structural+gbm+ecr, live-bridged FFA) \u2014 \u00a76g",
  "phase": "2 baseline",
- "db_only": 68,
+ "db_only": 40,
  "backup_qb": 3,
  "scoring_check": {
   "ffa_matches": "4pt",
