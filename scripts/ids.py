@@ -121,14 +121,20 @@ def resolve(name, pos, cw, aliases=None) -> str:
 
 
 # --------------------------------------------------------------- DB check -----
+def _week_input(fname):
+    import os
+    w = int(os.environ.get("DB_WEEK", "4"))
+    return ROOT / "input_data" / f"week{w}" / fname.format(w=w)
+
+
 def check_db(refresh: bool = False, topn: int = 200):
     cw = build_crosswalk(refresh=refresh)
     aliases = load_aliases()
 
-    db = pd.read_csv(ROOT / "input_data" / "week4" / "draft_battle_week4_projections.csv")
+    db = pd.read_csv(_week_input("draft_battle_week{w}_projections.csv"))
     db = db.sort_values("Rank").head(topn)
 
-    ffa = pd.read_csv(ROOT / "input_data" / "week4" / "ffa.csv")
+    ffa = pd.read_csv(_week_input("ffa.csv"))
     ffa_keys = {(name_key(p), str(pos).upper()) for p, pos in zip(ffa["player"], ffa["position"])}
     ffa_names = {name_key(p) for p in ffa["player"]}
 

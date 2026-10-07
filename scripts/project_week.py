@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the VALIDATED stacked model (Phase 10) to the live UPCOMING week (2026 W4).
+"""Apply the VALIDATED stacked model (Phase 10) to the live UPCOMING week (2026 W{N}, DB_WEEK).
 
 The backtest pipeline only covers *completed* weeks (the db_fpecr archive stops at
 2026 W3). This post-processor builds W4 feature rows the same way features.py builds
@@ -37,7 +37,7 @@ PARAMS = json.loads((ROOT / "model" / "params.json").read_text())
 STACK = PARAMS["stack"]
 WBP = STACK["weights_by_pos"]
 BRIDGE = STACK.get("live_bridge", {"ffa_takes": "ecr", "db_weight": 0})
-S, W = 2026, 4
+S, W = 2026, bb.WEEK   # upcoming week (DB_WEEK env, set by make_week)
 HIST = (2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026)
 
 
@@ -220,7 +220,7 @@ def main():
     interim = {p["id"]: p["mean"] for p in board}
     means, stats, sane = compute(board)
     named = ["Jahmyr Gibbs", "Josh Allen", "Jaxon Smith-Njigba", "George Kittle", "Cam Skattebo"]
-    print("=== live full-model W4 projection — interim vs full ===")
+    print(f"=== live full-model W{W} projection — interim vs full ===")
     for nm in named:
         p = next((x for x in board if idmod.name_key(nm) in idmod.name_key(x["name"])), None)
         if p:

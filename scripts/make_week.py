@@ -10,11 +10,9 @@ analytical outputs (backtest.json, params.json) into public/data for the Model t
 logs per-player projections to logs/week{N}/projections.csv, and runs the §11
 scoring check (does FFA look like 4- or 6-pt passing TDs?).
 
-NOTE (D5.5): the board build is Week-4-fixed for now; --week is recorded/echoed.
-The live board mean is the Phase-2 interim blend — the validated full stacked model
-(model/params.json) is applied to *completed* weeks via the backtest; projecting the
-*upcoming* week with structural+GBM needs a live-week feature builder (the ECR
-archive + features only cover played weeks) — deferred, see DECISIONS.
+--week N reads input_data/week{N}/ (ffa.csv + draft_battle_week{N}_projections.csv,
+optional injuries.csv), builds that week's slate, then project_week applies the
+validated full stack to the board mean (sanity-gated, interim fallback).
 """
 from __future__ import annotations
 
@@ -36,12 +34,20 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 
 def build(week, refresh):
-    import build_board, sim as simmod, opponents as opp, data_sources as ds
+    import os
+    os.environ["DB_WEEK"] = str(week)   # read by build_board/ids/project_week at import
+    inp = ROOT / "input_data" / f"week{week}"
+    need = [inp / "ffa.csv", inp / f"draft_battle_week{week}_projections.csv"]
+    missing = [str(p.relative_to(ROOT)) for p in need if not p.exists()]
+    if missing:
+        sys.exit(f"missing week-{week} inputs: {', '.join(missing)}")
+    import project_week, build_board, sim as simmod, opponents as opp, data_sources as ds
     if refresh:
         print("… refreshing sources"); ds.main(["--summary", "--refresh"])
     print(f"=== make_week {week}: building board / sim / opponents ===")
     build_board.main([])                      # board.json + meta.json (unit test + sanity)
     simmod.build_sim_json()                   # sim.json (empirical corr + DNP)
+    project_week.main()                       # full validated stack -> board mean (gated)
     opp.write_profiles()                      # opponents.json (synthetic fallback)
     # copy frozen analytical outputs into the served dir (Model tab reads these)
     for src, dst in [(ROOT / "backtest" / "report.json", PUB / "backtest.json"),
@@ -49,7 +55,7 @@ def build(week, refresh):
         if src.exists():
             shutil.copyfile(src, dst)
     log_projections(week)
-    scoring_check()
+    scoring_check(week)
     print(f"\nWeek {week} built → public/data/*.json. Open localhost:5175 (npm run dev).")
 
 
@@ -70,10 +76,10 @@ def log_projections(week):
     print(f"  logged {len(rows)} projections → {out/'projections.csv'}")
 
 
-def scoring_check():
+def scoring_check(week):
     """§11: do FFA's QB points look like 4- or 6-pt passing TDs? Compare FFA to each
     top-24 QB's recent stat line scored both ways. Flag if FFA matches 6 (mismatch)."""
-    ffa = pd.read_csv(ROOT / "input_data" / "week4" / "ffa.csv")
+    ffa = pd.read_csv(ROOT / "input_data" / f"week{week}" / "ffa.csv")
     import ids as idmod, build_board as bb, data_sources as ds
     qbs = ffa[ffa["position"].astype(str).str.upper() == "QB"].nlargest(24, "points")
     stats = pd.concat([d for d in (ds.load_stats(2025), ds.load_stats(2026)) if d is not None], ignore_index=True)

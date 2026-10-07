@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
 import re
 from datetime import datetime, timezone
@@ -34,6 +35,10 @@ PUBLIC = ROOT / "public" / "data"
 SCORING = json.loads((ROOT / "model" / "scoring.json").read_text())
 POS_OK = {"QB", "RB", "WR", "TE"}
 CURRENT_SEASON = 2026
+# upcoming week to build; make_week sets DB_WEEK before importing (default 4 = original build)
+WEEK = int(os.environ.get("DB_WEEK", "4"))
+INPUT = ROOT / "input_data" / f"week{WEEK}"
+DB_CSV = INPUT / f"draft_battle_week{WEEK}_projections.csv"
 
 # report-status -> P(plays), the simple Phase-2 rule (fitted model lands in Phase 8)
 PLAY_RULE = {"OUT": 0.0, "IR": 0.0, "DOUBTFUL": 0.25, "QUESTIONABLE": 0.85}
@@ -109,7 +114,7 @@ def qb_rush_share(logs, gsis):
 def game_environment():
     """team -> {implied, opp, is_home, starter_qb} for the current week."""
     games = ds.load_games()
-    wk = games[(games["season"] == CURRENT_SEASON) & (games["week"] == 4)]
+    wk = games[(games["season"] == CURRENT_SEASON) & (games["week"] == WEEK)]
     env = {}
     for _, g in wk.iterrows():
         tot, spr = _num(g["total_line"]), _num(g["spread_line"])
@@ -164,7 +169,7 @@ def ecr_map():
 
 
 def ffa_map_and_curve():
-    ffa = pd.read_csv(ROOT / "input_data" / "week4" / "ffa.csv")
+    ffa = pd.read_csv(INPUT / "ffa.csv")
     ffa["_k"] = ffa["player"].map(idmod.name_key)
     m = {(r["_k"], str(r["position"]).upper()): _num(r["points"]) for _, r in ffa.iterrows()}
     curve = {}
@@ -185,12 +190,12 @@ def build():
     ecr = ecr_map()
     ffa_m, ffa_curve = ffa_map_and_curve()
     late = {}
-    late_path = ROOT / "input_data" / "week4" / "injuries.csv"
+    late_path = INPUT / "injuries.csv"
     if late_path.exists():
         for _, r in pd.read_csv(late_path).iterrows():
             late[(idmod.name_key(r.get("player")), )] = str(r.get("status", "")).upper()
 
-    db = pd.read_csv(ROOT / "input_data" / "week4" / "draft_battle_week4_projections.csv").sort_values("Rank")
+    db = pd.read_csv(DB_CSV).sort_values("Rank")
     board = []
     for _, r in db.iterrows():
         name, pos = str(r["Name"]), str(r["Position"]).upper()
@@ -277,7 +282,7 @@ def write_outputs(board):
     (PUBLIC / "board.json").write_text(json.dumps(board, indent=1))
     meta = {
         "built_at": datetime.now(timezone.utc).isoformat(),
-        "week": 4, "season": CURRENT_SEASON,
+        "week": WEEK, "season": CURRENT_SEASON,
         "n_players": len(board),
         "scoring": SCORING,
         "mean_recipe": "0.5*FFA + 0.5*ECR-implied (interim); fallback FFA -> ECR -> DB*0.85",
