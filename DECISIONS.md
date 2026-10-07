@@ -141,3 +141,15 @@ _Every default taken from BRIEF.md, and every call the brief doesn't cover. One 
 - **Live rooms:** 3 exported rooms (seats 2/6/8) → `input_data/week4/ai_rooms_live.csv`. Exports carry no AI names, so seat→AI was inferred (Hungarian on position-sequence likelihood + cross-room consistency). Hocking/Beaumont/Mullins match their scripts exactly; **Cobble and Tubbs ran a new pattern in all 3 rooms** (Cobble QB-RB/WR-QB-RB-RB-RB…, Tubbs RB-RB-WR/RB-QB-QB…); Krebs opened QB instead of RB.
 - **Refit:** `ingest_ai_data.py` merges live rooms at weight 100× a workbook room; `round_script` = the weighted medoid of observed full sequences (always a valid build; per-round votes produced 3-QB/2-TE scripts). Old profile script kept as `profile_script`.
 - **Check:** leave-one-room-out round-position accuracy 172/231 → 200/231. Replay (in-sample) exact-player 60% → 72%. Residual misses are ranking drift during the day (e.g. Lamar Jackson #9 skipped in all 3 rooms) rather than script errors.
+
+## D-SD.1 — Conditional SD model tested, NOT shipped (2026-10-07)
+Goal: narrow the 90% interval without losing coverage. `scripts/sd_model.py` fit (walk-forward,
+2021-24 train, held-out 2025, played games, n=11,167/2,882) a GBM variance model on ECR SD
+(expert disagreement), Vegas total/spread/implied, dome, wind, target share, WOPR, carries, pass
+att, xFP, own recency-weighted SD + CV, n_prior, mean, and the shipped SD; plus conformalized
+quantile GBMs (CQR). Held-out interval score (lower=better): base 27.71, var 27.93, CQR 27.92.
+At exactly-matched 90% coverage (oracle scale) the factor model is only 1.2% narrower
+(21.59 vs 21.86 pts). Importance: shipped SD + mean dominate; carries/target share/xFP/|spread|
+add a little; ECR SD, dome, wind add nothing. Conclusion: interval width is irreducible weekly
+noise (2025 residual SD 7.0 around a 5.4-MAE mean) — the lever for tighter intervals is a better
+MEAN, not a new SD. Kept shipped player_sd. Report: backtest/sd_model_report.json.

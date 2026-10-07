@@ -17,3 +17,5 @@ build/_parity_draft.json
 
 # os
 .DS_Store
+backtest/sd_matrix.parquet
+backtest/interval_grid.npz
