@@ -55,6 +55,7 @@ def build(week, refresh):
         if src.exists():
             shutil.copyfile(src, dst)
     log_projections(week)
+    shutil.copyfile(PUB / "board.json", LOGS / f"week{week}" / "board.json")  # snapshot for --score
     scoring_check(week)
     print(f"\nWeek {week} built → public/data/*.json. Open localhost:5175 (npm run dev).")
 
@@ -106,47 +107,95 @@ def scoring_check(week):
     (PUB / "meta.json").write_text(json.dumps(meta, indent=1))
 
 
-def score(week, season=2026):
-    """Score a PLAYED week: our board-style projection (ECR-implied) vs actuals,
-    per position + overall, into logs/scorecard.json + public/data/scorecard.json."""
-    import backtest as bt
-    games = bt.ds.load_games()
-    wp = bt.ecr_to_gsis(bt.ecr_weekly(games))
-    wp = wp[(wp["season"] == season) & (wp["week"] == week) & wp["gsis"].notna()]
-    if wp.empty:
-        print(f"no ECR universe for {season} W{week} (archive may lag) — nothing to score."); return
-    # actuals for the FULL history the isotonic trains on (not just 2 seasons) + target week
-    act = bt.load_actuals(tuple(range(2020, season + 1))).set_index(["player_id", "season", "week"])["pts"]
-    iso = bt.isotonic_by_pos(bt.ecr_to_gsis(bt.ecr_weekly(games)).assign(
-        y=lambda d: [act.get((g, s, w), 0.0) for g, s, w in zip(d["gsis"], d["season"], d["week"])]
-    ).query("season < @season"))
-    import player_sd, distribution as dist
-    per = {p: {"in": 0, "n": 0, "ae": [], "crps": []} for p in bt.POS}
-    my_results = []
-    for _, r in wp.iterrows():
-        pos, pid = r["pos"], r["gsis"]
-        if pos not in iso:
-            continue
-        mu = float(iso[pos].predict([r["pos_rank"]])[0])
-        y = float(act.get((pid, season, week), 0.0))
-        sd = player_sd.player_sd(pos, mu, [])["sd"]
-        d = dist.player_distribution(pos, mu, sd, 1.0, None)
-        p05, p95 = d["p05"], d["p95"]
-        inci = p05 <= y <= p95
-        per[pos]["n"] += 1; per[pos]["in"] += inci; per[pos]["ae"].append(abs(mu - y))
-        my_results.append({"name": r.get("player"), "position": pos, "actual": round(y, 1),
-                           "p05": p05, "p95": p95, "in_ci": bool(inci)})
-    cov = {p: round(per[p]["in"] / per[p]["n"], 3) for p in bt.POS if per[p]["n"]}
-    mae = {p: round(float(np.mean(per[p]["ae"])), 2) for p in bt.POS if per[p]["ae"]}
-    alln = sum(per[p]["n"] for p in bt.POS); alli = sum(per[p]["in"] for p in bt.POS)
+def score(week, season=2026, universe=200):
+    """Score a PLAYED week: the board we actually shipped (logs/week{N}/board.json)
+    vs actuals, injury-aware. Universe = board players with db_rank <= `universe`.
+
+    Each player is classed played / injury_dnp (final report Out/Doubtful/IR, or
+    Questionable and didn't play) / other_dnp (no designation, didn't play).
+    - coverage90_shipped: actual inside the shipped mixture interval (incl. DNP mass)
+    - coverage90 / mae: PLAYED players only, vs the conditional-on-playing interval
+      and mean -- the talent model, not penalised for injuries it can't see
+    - availability: expected DNPs (sum 1-p_play) vs actual, and every injury DNP
+    """
+    import backtest as bt, data_sources as ds, ids as idmod, distribution as dist
+    snap = LOGS / f"week{week}" / "board.json"
+    if not snap.exists():
+        sys.exit(f"no board snapshot at {snap.relative_to(ROOT)} -- can't score W{week}")
+    board = [p for p in json.loads(snap.read_text()) if p.get("db_rank", 999) <= universe]
+    act = bt.load_actuals((season,))
+    act = act[act["week"] == week].groupby("player_id")["pts"].sum()
+    if act.empty:
+        print(f"no box scores for {season} W{week} yet -- nothing to score."); return
+    # played = box-score row or offensive snaps (catches 0-stat games)
+    sn = ds.load_snaps(season)
+    sn = sn[(sn["week"] == week) & (pd.to_numeric(sn["offense_snaps"], errors="coerce") > 0)]
+    snapped = {(idmod.name_key(n), t) for n, t in zip(sn["player"], sn["team"])}
+    inj = ds.load_injuries(season)
+    inj = inj[inj["week"] == week].dropna(subset=["gsis_id"])
+    final = {g: str(r).upper() for g, r in zip(inj["gsis_id"], inj["report_status"]) if isinstance(r, str)}
+    ros = ds.load_rosters(season)
+    ros = ros[ros["week"] == week].dropna(subset=["gsis_id"])
+    rstat = dict(zip(ros["gsis_id"], ros["status"]))
+
+    rows = []
+    for p in board:
+        pid, pos = str(p["id"]), p["position"]
+        played = pid in act.index or (idmod.name_key(p["name"]), p.get("team")) in snapped
+        y = float(act.get(pid, 0.0))
+        status = final.get(pid) or ("IR" if rstat.get(pid) == "RES" else None)
+        if played:
+            cls = "played"
+        elif status in ("OUT", "DOUBTFUL", "IR", "QUESTIONABLE") or rstat.get(pid) in ("RES", "INA"):
+            cls = "injury_dnp"
+        else:
+            cls = "other_dnp"
+        tab = dist.build_inv_cdf_table(p["min"], p["max"], p["knots"])
+        c05, c95 = (max(0.0, dist.lerp(tab, .05)), dist.lerp(tab, .95)) if tab else (p["p05"], p["p95"])
+        rows.append({"id": pid, "name": p["name"], "position": pos, "team": p.get("team"),
+                     "db_rank": p["db_rank"], "mean": p["mean"], "sd": p["sd"], "p_play": p["p_play"],
+                     "p05": p["p05"], "p95": p["p95"], "c05": round(c05, 2), "c95": round(c95, 2),
+                     "actual": round(y, 2), "status": status, "class": cls,
+                     "abs_err": round(abs(y - p["mean"]), 2) if played else None,
+                     "err": round(y - p["mean"], 2) if played else None,
+                     "in_ci": bool(c05 <= y <= c95) if played else None,
+                     "in_ci_shipped": bool(p["p05"] <= y <= p["p95"])})
+    df = pd.DataFrame(rows)
+    pl = df[df["class"] == "played"]
+
+    def summ(d):
+        return {"n": int(len(d)), "coverage90": round(float(d["in_ci"].mean()), 3),
+                "mae": round(float(d["abs_err"].mean()), 2),
+                "bias": round(float(d["err"].mean()), 2),
+                "below": round(float((d["actual"] < d["c05"]).mean()), 3),
+                "above": round(float((d["actual"] > d["c95"]).mean()), 3),
+                "width90": round(float((d["c95"] - d["c05"]).mean()), 2)}
+    by_pos = {pos: summ(pl[pl["position"] == pos]) for pos in bt.POS if (pl["position"] == pos).any()}
+    dnp = df[df["class"] != "played"]
     sc = {"season": season, "week": week, "scored_at": datetime.now(timezone.utc).isoformat(),
-          "coverage90": round(alli / alln, 3) if alln else None, "coverage90_by_pos": cov,
-          "mae_by_pos": mae, "n": alln, "model": "ecr_implied (shippable market+); full stack validated on held-out (Model tab)",
-          "my_results": sorted(my_results, key=lambda x: -x["actual"])[:60]}
+          "model": json.loads((PUB / "meta.json").read_text()).get("mean_recipe") if week == json.loads((PUB / "meta.json").read_text()).get("week") else "shipped board snapshot",
+          "universe": f"board db_rank <= {universe}", "n": int(len(df)),
+          "played": summ(pl), "by_pos": by_pos,
+          "coverage90": summ(pl)["coverage90"], "coverage90_by_pos": {k: v["coverage90"] for k, v in by_pos.items()},
+          "mae_by_pos": {k: v["mae"] for k, v in by_pos.items()},
+          "coverage90_shipped": round(float(df["in_ci_shipped"].mean()), 3),
+          "availability": {"expected_dnp": round(float((1 - df["p_play"]).sum()), 1),
+                           "injury_dnp": int((df["class"] == "injury_dnp").sum()),
+                           "other_dnp": int((df["class"] == "other_dnp").sum()),
+                           "dnp_players": dnp.sort_values("db_rank")[["name", "position", "team", "db_rank", "p_play", "status", "class"]].to_dict("records")},
+          "my_results": df.sort_values("db_rank").to_dict("records")}
+    sc = json.loads(json.dumps(sc, default=lambda o: None if o != o else o).replace("NaN", "null"))
     LOGS.mkdir(exist_ok=True)
     (LOGS / "scorecard.json").write_text(json.dumps(sc, indent=1))
     (PUB / "scorecard.json").write_text(json.dumps(sc, indent=1))
-    print(f"=== scored {season} W{week}: 90% coverage {sc['coverage90']} (n={alln}); by pos {cov} → scorecard.json ===")
+    P = sc["played"]
+    print(f"=== scored {season} W{week} (top-{universe} board): played n={P['n']} · 90% cov {P['coverage90']} "
+          f"(below {P['below']}, above {P['above']}) · MAE {P['mae']} · bias {P['bias']:+} · width {P['width90']}")
+    for k, v in by_pos.items():
+        print(f"  {k}: n={v['n']:3d} cov {v['coverage90']:.3f}  MAE {v['mae']:5.2f}  bias {v['bias']:+5.2f}  width {v['width90']:5.1f}")
+    a = sc["availability"]
+    print(f"  availability: expected DNP {a['expected_dnp']} vs actual {a['injury_dnp']} injury + {a['other_dnp']} other")
+    print(f"  shipped-interval coverage (all, incl. DNP mass): {sc['coverage90_shipped']}")
 
 
 def main(argv=None):
